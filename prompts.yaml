@@ -1,0 +1,61 @@
+description: "Complex document extraction prompt that follows a multi-step reasoning pattern for extracting specific information"
+template: |
+  # Document Information Extraction
+  
+  You are a specialized document analysis AI tasked with extracting structured information from the following document.
+  
+  ## Context
+  The document is from: {document_source}
+  Document type: {document_type}
+  Focus areas: {focus_areas}
+  
+  ## Document Content
+  ```
+  {document_content}
+  ```
+  
+  ## Extraction Task
+  Please extract the following information:
+  
+  1. Extract all mentions of {target_entity} and their relationships to other entities
+  2. Identify key metrics related to {metrics_focus}
+  3. Summarize the main points regarding {summary_topic}
+  4. Create a structured representation of {structure_focus}
+  
+  ## Output Format
+  Format your response as follows:
+  
+  ### Entity Analysis
+  [List all instances of {target_entity} with page/paragraph references]
+  
+  ### Key Metrics
+  [Table of metrics with values and context]
+  
+  ### Summary
+  [Concise 3-5 paragraph summary of {summary_topic}]
+  
+  ### Structured Representation
+  [JSON or structured format of {structure_focus}]
+  
+  ## Additional Guidelines
+  - Maintain factual accuracy - quote directly when appropriate
+  - Do not infer information not present in the document
+  - Note any ambiguities or unclear sections
+  - If information is not available, state this explicitly
+  - {additional_instructions}
+
+variables:
+  - document_source
+  - document_type
+  - document_content
+  - focus_areas
+  - target_entity
+  - metrics_focus
+  - summary_topic
+  - structure_focus
+  - additional_instructions
+
+required_variables:
+  - document_content
+  - target_entity
+  - summary_topic

@@ -6,11 +6,13 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 # Now continue with your regular imports
 import streamlit as st
 import os
+import re
 from components.file_processor import process_pdfs
 from components.vector_store import VectorStore
 from components.llm_service import LLMService
 from components.event_bus import EventBus
 from components.evaluation import EvaluationService
+from components.prompt_manager import PromptManager
 
 # Configure page
 st.set_page_config(
@@ -32,6 +34,12 @@ if "extraction_results" not in st.session_state:
     st.session_state.extraction_results = []
 if "processing_status" not in st.session_state:
     st.session_state.processing_status = ""
+if "prompt_manager" not in st.session_state:
+    st.session_state.prompt_manager = PromptManager()
+if "prompt_batch_queue" not in st.session_state:
+    st.session_state.prompt_batch_queue = []
+if "batch_results" not in st.session_state:
+    st.session_state.batch_results = []
 
 # App Header
 st.title("Advanced PDF Question Answering System")
@@ -64,7 +72,7 @@ with st.sidebar:
     enable_token_tracking = st.checkbox("Track Token Usage", value=True)
 
 # Main functionality in tabs
-tab1, tab2, tab3, tab4 = st.tabs(["Upload PDFs", "Ask Questions", "Batch Processing", "Evaluation Results"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Upload PDFs", "Ask Questions", "Batch Processing", "Evaluation Results", "Prompt Templates"])
 
 with tab1:
     st.header("Upload and Process Documents")
@@ -280,6 +288,188 @@ with tab4:
             )
     else:
         st.info("No evaluation data available yet. Process some questions to generate evaluation metrics.")
+
+with tab5:
+    st.header("Prompt Template Management")
+    
+    # Sidebar for prompt management
+    prompt_action = st.radio("Action", ["Use existing prompts", "Create new prompt"])
+    
+    if prompt_action == "Use existing prompts":
+        available_prompts = st.session_state.prompt_manager.get_available_prompts()
+        if not available_prompts:
+            st.info("No prompt templates available. Create a new prompt template to get started.")
+        else:
+            selected_prompt = st.selectbox("Select Prompt Template", available_prompts)
+            
+            if selected_prompt:
+                prompt_info = st.session_state.prompt_manager.get_prompt_info(selected_prompt)
+                
+                st.subheader("Prompt Information")
+                st.write(f"**Description:** {prompt_info['description']}")
+                
+                st.subheader("Variables")
+                variables_dict = {}
+                
+                for var in prompt_info['variables']:
+                    is_required = var in prompt_info['required_variables']
+                    label = f"{var} {'(required)' if is_required else ''}"
+                    if var == 'document_content':
+                        variables_dict[var] = st.text_area(label, height=150)
+                    else:
+                        variables_dict[var] = st.text_input(label)
+                
+                if st.button("Format Prompt"):
+                    try:
+                        formatted_prompt = st.session_state.prompt_manager.format_prompt(
+                            selected_prompt, variables_dict
+                        )
+                        st.subheader("Formatted Prompt")
+                        st.text_area("Result", formatted_prompt, height=300)
+                        
+                        # Option to add to batch queue
+                        if st.button("Add to Batch Queue"):
+                            if "prompt_batch_queue" not in st.session_state:
+                                st.session_state.prompt_batch_queue = []
+                            
+                            st.session_state.prompt_batch_queue.append({
+                                "prompt_name": selected_prompt,
+                                "variables": variables_dict,
+                                "formatted_prompt": formatted_prompt
+                            })
+                            st.success(f"Added to batch queue. Queue size: {len(st.session_state.prompt_batch_queue)}")
+                            
+                    except Exception as e:
+                        st.error(f"Error formatting prompt: {str(e)}")
+    
+    else:  # Create new prompt
+        st.subheader("Create New Prompt Template")
+        
+        new_prompt_name = st.text_input("Prompt Name (no spaces)")
+        new_prompt_desc = st.text_input("Description")
+        new_prompt_template = st.text_area("Template", height=200, 
+                                          help="Use {variable_name} syntax for variables")
+        
+        # Parse variables from template
+        if new_prompt_template:
+            variables = re.findall(r'\{(\w+)\}', new_prompt_template)
+            if variables:
+                st.write("Detected variables:", ", ".join(variables))
+                
+                # Let user select required variables
+                required_vars = st.multiselect("Required Variables", variables)
+            else:
+                st.warning("No variables detected in template. Use {variable_name} syntax.")
+                variables = []
+                required_vars = []
+        
+        if st.button("Save Prompt Template"):
+            if not new_prompt_name or not new_prompt_template:
+                st.error("Prompt name and template are required")
+            else:
+                try:
+                    st.session_state.prompt_manager.create_prompt(
+                        prompt_name=new_prompt_name,
+                        template=new_prompt_template,
+                        description=new_prompt_desc,
+                        variables=variables,
+                        required_variables=required_vars
+                    )
+                    st.success(f"Prompt template '{new_prompt_name}' created successfully")
+                except Exception as e:
+                    st.error(f"Error creating prompt: {str(e)}")
+    
+    # Batch Queue Management (if using existing prompts)
+    if prompt_action == "Use existing prompts" and "prompt_batch_queue" in st.session_state and st.session_state.prompt_batch_queue:
+        st.subheader("Batch Prompt Queue")
+        st.write(f"Queue size: {len(st.session_state.prompt_batch_queue)}")
+        
+        for i, item in enumerate(st.session_state.prompt_batch_queue):
+            with st.expander(f"Item {i+1}: {item['prompt_name']}"):
+                st.write(f"**Prompt:** {item['prompt_name']}")
+                st.write("**Variables:**")
+                for k, v in item['variables'].items():
+                    if len(str(v)) > 50:
+                        st.write(f"- {k}: {str(v)[:50]}...")
+                    else:
+                        st.write(f"- {k}: {v}")
+        
+        if st.button("Process Batch Queue") and st.session_state.vector_store:
+            if not api_key:
+                st.error("Please enter your OpenRouter API key in the sidebar")
+            else:
+                # Create LLM service
+                llm_service = LLMService(
+                    api_key=api_key,
+                    model_name=selected_model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    event_bus=st.session_state.event_bus
+                )
+                
+                # Get retriever from vector store
+                retriever = st.session_state.vector_store.get_retriever()
+                
+                # Process queue
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                batch_results = []
+                
+                for i, item in enumerate(st.session_state.prompt_batch_queue):
+                    status_text.text(f"Processing prompt {i+1}/{len(st.session_state.prompt_batch_queue)}...")
+                    
+                    try:
+                        # Use the formatted prompt as the question
+                        result = llm_service.ask_question(item['formatted_prompt'], retriever)
+                        
+                        batch_results.append({
+                            "prompt_name": item['prompt_name'],
+                            "variables": item['variables'],
+                            "result": result,
+                            "timestamp": st.session_state.evaluation_service.get_timestamp()
+                        })
+                        
+                        # Evaluate answer if enabled
+                        if enable_answer_eval:
+                            st.session_state.evaluation_service.evaluate_answer(
+                                item['formatted_prompt'], result
+                            )
+                            
+                    except Exception as e:
+                        batch_results.append({
+                            "prompt_name": item['prompt_name'],
+                            "variables": item['variables'],
+                            "result": f"Error: {str(e)}",
+                            "timestamp": st.session_state.evaluation_service.get_timestamp()
+                        })
+                    
+                    # Update progress
+                    progress_bar.progress((i + 1) / len(st.session_state.prompt_batch_queue))
+                
+                # Store results and clear queue
+                st.session_state.batch_results = batch_results
+                st.session_state.prompt_batch_queue = []
+                status_text.text("All prompts processed!")
+                
+                # Display results
+                st.subheader("Batch Results")
+                for i, result in enumerate(batch_results):
+                    with st.expander(f"Result {i+1}: {result['prompt_name']}"):
+                        st.write(f"**Prompt Template:** {result['prompt_name']}")
+                        st.write("**Variables:** ", ", ".join(result['variables'].keys()))
+                        st.markdown(f"**Result:**\n\n{result['result']}")
+                        st.text(f"Processed at: {result['timestamp']}")
+
+    # Display previous batch results
+    if "batch_results" in st.session_state and st.session_state.batch_results:
+        st.subheader("Previous Batch Results")
+        for i, result in enumerate(st.session_state.batch_results):
+            with st.expander(f"Result {i+1}: {result['prompt_name']}"):
+                st.write(f"**Prompt Template:** {result['prompt_name']}")
+                st.write("**Variables:** ", ", ".join(result['variables'].keys()))
+                st.markdown(f"**Result:**\n\n{result['result']}")
+                st.text(f"Processed at: {result['timestamp']}")
 
 # Footer
 st.markdown("---")
