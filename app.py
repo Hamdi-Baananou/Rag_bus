@@ -1,3 +1,9 @@
+# Add this at the very top of the file to fix SQLite version issue
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
+# Now continue with your regular imports
 import streamlit as st
 import os
 from components.file_processor import process_pdfs
