@@ -1,61 +1,445 @@
-description: "Complex document extraction prompt that follows a multi-step reasoning pattern for extracting specific information"
-template: |
-  # Document Information Extraction
-  
-  You are a specialized document analysis AI tasked with extracting structured information from the following document.
-  
-  ## Context
-  The document is from: {document_source}
-  Document type: {document_type}
-  Focus areas: {focus_areas}
-  
-  ## Document Content
-  ```
-  {document_content}
-  ```
-  
-  ## Extraction Task
-  Please extract the following information:
-  
-  1. Extract all mentions of {target_entity} and their relationships to other entities
-  2. Identify key metrics related to {metrics_focus}
-  3. Summarize the main points regarding {summary_topic}
-  4. Create a structured representation of {structure_focus}
-  
-  ## Output Format
-  Format your response as follows:
-  
-  ### Entity Analysis
-  [List all instances of {target_entity} with page/paragraph references]
-  
-  ### Key Metrics
-  [Table of metrics with values and context]
-  
-  ### Summary
-  [Concise 3-5 paragraph summary of {summary_topic}]
-  
-  ### Structured Representation
-  [JSON or structured format of {structure_focus}]
-  
-  ## Additional Guidelines
-  - Maintain factual accuracy - quote directly when appropriate
-  - Do not infer information not present in the document
-  - Note any ambiguities or unclear sections
-  - If information is not available, state this explicitly
-  - {additional_instructions}
+# Document Information Extraction Prompts
 
-variables:
-  - document_source
-  - document_type
-  - document_content
-  - focus_areas
-  - target_entity
-  - metrics_focus
-  - summary_topic
-  - structure_focus
-  - additional_instructions
+material_filling_prompt:
+  description: "Complex document extraction prompt that follows a multi-step reasoning pattern for extracting material filling information"
+  template: |
+    # Document Information Extraction
+    
+    You are a specialized document analysis AI tasked with extracting structured information from the following document.
+    
+    ## Context
+    The document is from: {document_source}
+    Document type: {document_type}
+    Focus areas: Material compositions and additives
+    
+    ## Document Content
+    ```
+    {document_content}
+    ```
+    
+    ## Extraction Task
+    Please extract the following information:
+    
+    Extract material filling additives using this reasoning chain:
 
-required_variables:
-  - document_content
-  - target_entity
-  - summary_topic
+    STEP 1: ADDITIVE IDENTIFICATION
+    - Scan document sections for:
+      ✓ Explicit additive declarations (GF, GB, MF, T)
+      ✓ Mechanical property context clues:
+        * "reinforced with..."
+        * "improved [strength/stiffness] using..."
+        * "contains X% [additive]"
+      ✓ Negative statements: "no additives", "unfilled"
+
+    STEP 2: CONTEXT VALIDATION
+    - For each candidate additive:
+      ✓ Confirm direct mechanical purpose:
+        - "GF30 for stiffness" → Valid ✓ 
+        - "GB colorant" → Rejected ✗ (non-mechanical)
+      ✗ Reject incidental mentions:
+        - "MF manufacturing facility" → Rejected ✗ 
+
+    STEP 3: NEGATION CHECK
+    - If explicit "no additives" statement is found:
+      ✓ Verify no contradictory mentions.
+      ✓ If confirmed, return **"none"**.
+
+    STEP 4: STANDARDIZATION
+    - Convert equivalents to standard abbreviations:
+      * "Glass fiber" → GF
+      * "Mineral-filled" → MF
+      * "Talc-filled" → T
+      * "Glass beads" → GB
+      * "Mica-filled" → MF
+    - Reject non-standard or ambiguous terms:
+      * "Carbon additives" → **NOT FOUND**
+
+    STEP 5: CERTAINTY ASSESSMENT
+    - Final check:
+      ✓ At least **one** valid additive with mechanical context.
+      ✓ No ambiguous or non-standard terms.
+      ✓ No conflicting information.
+    - If any doubts exist → **NOT FOUND**.
+    
+    ## Output Format
+    Format your response as follows:
+    
+    ### Entity Analysis
+    [List all instances of material fillings with page/paragraph references]
+    
+    ### Key Metrics
+    [Table of additives with their percentages if available]
+    
+    ### Summary
+    [Concise 3-5 paragraph summary of material fillings]
+    
+    ### Structured Representation
+    REASONING: [Step analysis summary]  
+    MATERIAL FILLING: [abbreviations/none/NOT FOUND]
+    
+    ## Additional Guidelines
+    - Maintain factual accuracy - quote directly when appropriate
+    - Do not infer information not present in the document
+    - Note any ambiguities or unclear sections
+    - If information is not available, state this explicitly
+    - {additional_instructions}
+  required_variables:
+    - document_content
+    - target_entity
+    - summary_topic
+
+pull_to_seat_prompt:
+  description: "Complex document extraction prompt that follows a multi-step reasoning pattern for extracting pull-to-seat requirements"
+  template: |
+    # Document Information Extraction
+    
+    You are a specialized document analysis AI tasked with extracting structured information from the following document.
+    
+    ## Context
+    The document is from: {document_source}
+    Document type: {document_type}
+    Focus areas: Terminal insertion and assembly methods
+    
+    ## Document Content
+    ```
+    {document_content}
+    ```
+    
+    ## Extraction Task
+    Please extract the following information:
+    
+    Determine Pull-To-Seat requirement using this reasoning chain:
+
+    STEP 1: ACTION IDENTIFICATION
+    - Scan for:
+      ✓ Explicit "pull-to-seat" mentions
+      ✓ Terminal insertion process descriptions:
+        * "Pull-back assembly required"
+        * "Tug-lock mechanism"
+        * "Retract-to-secure"
+      ✓ Alternative methods:
+        * "Pre-inserted terminals"
+        * "Tool-free insertion"
+        * "Push-fit design"
+
+    STEP 2: OPERATIONAL CONTEXT VALIDATION
+    - Confirm mentions relate to PRIMARY ASSEMBLY:
+      ✓ Terminal/wire installation
+      ✓ Final seating action
+      ✗ Maintenance/removal procedures
+      ✗ Secondary locking mechanisms
+
+    STEP 3: NEGATION HANDLING
+    - Check for explicit denials:
+      ✓ "No pull-to-seat required"
+      ✓ "Self-retaining terminals"
+      ✓ "Zero-stroke insertion"
+    - Verify no contradictory claims
+
+    STEP 4: ASSEMBLY CONTEXT CONFIRMATION
+    - Required pull action must be:
+      ✓ Final assembly step
+      ✓ Necessary for terminal retention
+      ✓ Performed by installer (not tool)
+    - If tool-assisted pull: Treat as "No"
+
+    STEP 5: FINAL VERIFICATION
+    - Meets ALL criteria:
+      1. Explicit pull action requirement ✓
+      2. Assembly-phase context ✓
+      3. No alternative retention methods ✓
+    - Any ambiguity → Default to "No"
+    
+    ## Output Format
+    Format your response as follows:
+    
+    ### Entity Analysis
+    [List all instances of assembly methods with page/paragraph references]
+    
+    ### Key Metrics
+    [Table of terminal insertion methods with context]
+    
+    ### Summary
+    [Concise 3-5 paragraph summary of pull-to-seat requirements]
+    
+    ### Structured Representation
+    REASONING: [Key step determinations]  
+    PULL-TO-SEAT: [Yes/No]
+    
+    ## Additional Guidelines
+    - Maintain factual accuracy - quote directly when appropriate
+    - Do not infer information not present in the document
+    - Note any ambiguities or unclear sections
+    - If information is not available, state this explicitly
+    - {additional_instructions}
+  required_variables:
+    - document_content
+    - target_entity
+    - summary_topic
+
+material_name_prompt:
+  description: "Complex document extraction prompt that follows a multi-step reasoning pattern for extracting primary polymer material"
+  template: |
+    # Document Information Extraction
+    
+    You are a specialized document analysis AI tasked with extracting structured information from the following document.
+    
+    ## Context
+    The document is from: {document_source}
+    Document type: {document_type}
+    Focus areas: Material compositions and polymer types
+    
+    ## Document Content
+    ```
+    {document_content}
+    ```
+    
+    ## Extraction Task
+    Please extract the following information:
+    
+    Extract primary polymer material using this reasoning chain:
+
+    STEP 1: MATERIAL IDENTIFICATION
+    - Scan for:
+      ✓ Explicit polymer declarations (PA66, PBT, etc.)
+      ✓ Composite notations (PA6-GF30, PPS-MF15)
+      ✓ Additive markers (GF, GB, MF, T)
+      ✓ Weight percentages (PA(70%), PBT(30%))
+
+    STEP 2: BASE MATERIAL ISOLATION
+    - Remove additives/fillers from composite names:
+      PA66-GF30 → PA66
+      LCP-MF45 → LCP
+    - If additives-only mentioned (GF40): 
+      → Check context for base polymer
+      → Else: NOT FOUND
+
+    STEP 3: WEIGHT HIERARCHY ANALYSIS
+    - Compare numerical weights when present:
+      PA66(55%)/PA6(45%) → PA66
+    - No weights? Use declaration order:
+      "Primary material: PPS, Secondary: LCP" → PPS
+
+    STEP 4: SPECIFICITY RESOLUTION
+    - Prefer exact grades:
+      PA66 > PA6 > PA
+      PPSU > PPS
+    - Handle generics:
+      "Thermoplastic" + GF → PA
+      "High-temp polymer" → PPS
+
+    STEP 5: VALIDATION
+    - Confirm single material meets ALL:
+      1. Base polymer identification
+      2. Weight/declaration priority
+      3. Specificity requirements
+    - Uncertain? → NOT FOUND
+    
+    ## Output Format
+    Format your response as follows:
+    
+    ### Entity Analysis
+    [List all instances of polymer materials with page/paragraph references]
+    
+    ### Key Metrics
+    [Table of materials with their percentages if available]
+    
+    ### Summary
+    [Concise 3-5 paragraph summary of primary polymer materials]
+    
+    ### Structured Representation
+    REASONING: [Step analysis with ✓/✗ markers]
+    MATERIAL NAME: [UPPERCASE]
+    
+    ## Additional Guidelines
+    - Maintain factual accuracy - quote directly when appropriate
+    - Do not infer information not present in the document
+    - Note any ambiguities or unclear sections
+    - If information is not available, state this explicitly
+    - {additional_instructions}
+  required_variables:
+    - document_content
+    - target_entity
+    - summary_topic
+
+working_temperature_prompt:
+  description: "Complex document extraction prompt that follows a multi-step reasoning pattern for extracting working temperature ranges"
+  template: |
+    # Document Information Extraction
+    
+    You are a specialized document analysis AI tasked with extracting structured information from the following document.
+    
+    ## Context
+    The document is from: {document_source}
+    Document type: {document_type}
+    Focus areas: Temperature specifications and operational ranges
+    
+    ## Document Content
+    ```
+    {document_content}
+    ```
+    
+    ## Extraction Task
+    Please extract the following information:
+    
+    Determine working temperatures using this reasoning chain:
+
+    STEP 1: DATA IDENTIFICATION
+    - Scan for:
+      ✓ Explicit temperature ranges (e.g., "-40°C to 125°C")
+      ✓ Discrete values:
+        * "Max. operating temp: 150°C"
+        * "Minimum: -40°C"
+      ✓ Standard references:
+        * UL RTI/IEC/AEC-Q200
+        * Automotive/Industrial grades
+
+    STEP 2: MAX TEMPERATURE RESOLUTION
+    - Collect all max candidates:
+      > Explicit numbers
+      > Standard-derived values (e.g., UL RTI 130°C → 130)
+    - Apply hierarchy:
+      1. Explicit stated maximums
+      2. Range upper bounds ("X°C to Y°C" → Y)
+      3. Standard implications
+    - No data? → 999
+
+    STEP 3: MIN TEMPERATURE RESOLUTION
+    - Collect min candidates:
+      > Explicit numbers
+      > Standard implications:
+        * Automotive → -40°C
+        * Industrial → -20°C
+        * MIL-SPEC → -55°C
+    - Apply hierarchy:
+      1. Explicit stated minimums
+      2. Range lower bounds
+      3. Standard inferences
+    - No data? → 999
+
+    STEP 4: CONFLICT RESOLUTION
+    - Validate Max > Min:
+      > If explicit conflict (e.g., Max=100, Min=150):
+        → Prioritize explicit values
+        → Note inconsistency in reasoning
+    - Handle multiple standards:
+      > Use most stringent applicable
+
+    STEP 5: FINAL VALIDATION
+    - Both values = 999? → NOT FOUND
+    - Any value ≠999? → Final output
+    
+    ## Output Format
+    Format your response as follows:
+    
+    ### Entity Analysis
+    [List all instances of temperature specifications with page/paragraph references]
+    
+    ### Key Metrics
+    [Table of temperature values with context]
+    
+    ### Summary
+    [Concise 3-5 paragraph summary of working temperature ranges]
+    
+    ### Structured Representation
+    REASONING: [Key determinations per step]  
+    WORKING TEMPERATURE: [Max], [Min]/NOT FOUND
+    
+    ## Additional Guidelines
+    - Maintain factual accuracy - quote directly when appropriate
+    - Do not infer information not present in the document
+    - Note any ambiguities or unclear sections
+    - If information is not available, state this explicitly
+    - {additional_instructions}
+  required_variables:
+    - document_content
+    - target_entity
+    - summary_topic
+
+colour_prompt:
+  description: "Complex document extraction prompt that follows a multi-step reasoning pattern for extracting connector color information"
+  template: |
+    # Document Information Extraction
+    
+    You are a specialized document analysis AI tasked with extracting structured information from the following document.
+    
+    ## Context
+    The document is from: {document_source}
+    Document type: {document_type}
+    Focus areas: Physical appearance and color specifications
+    
+    ## Document Content
+    ```
+    {document_content}
+    ```
+    
+    ## Extraction Task
+    Please extract the following information:
+    
+    Determine connector color using this reasoning chain:
+
+    STEP 1: PART TYPE CLASSIFICATION
+    - Identify from:
+      ✓ "Assembled"/"Multi-component" → Assembly
+      ✓ "Housing"/"Single-piece" → Connector body
+      ✓ Component lists with separate colors
+
+    STEP 2: COLOR SOURCE SELECTION
+    - For ASSEMBLIES:
+      > Analyze all components (housing, latches, seals)
+      > Ignore non-structural elements (labels, markings)
+    - For SINGLE-PIECE:
+      > Focus on housing material description
+      > Ignore contact/terminal colors
+
+    STEP 3: DOMINANCE ANALYSIS
+    - Evaluate color references:
+      ✓ Quantitative: "70% black cover"
+      ✓ Qualitative: "primary color", "main housing"
+      ✓ Visual hierarchy: "red base with blue accents"
+    - Multi-color triggers:
+      * "Striped"/"checkered" patterns
+      * Equal distribution ("50-50 split")
+      * Explicit "multi-color" statement
+
+    STEP 4: CONTEXT VALIDATION
+    - Reject ambiguous terms:
+      ✗ "Natural" (unless defined)
+      ✗ Material-inferred colors (brass=golden)
+    - Accept only explicitly stated colors:
+      ✓ "Black housing"
+      ✓ "Blue CPA latch"
+
+    STEP 5: FINAL RESOLUTION
+    - Apply priority:
+      1. Explicit dominant color
+      2. Assembly majority
+      3. Multi-color indicators
+      4. NOT FOUND
+    
+    ## Output Format
+    Format your response as follows:
+    
+    ### Entity Analysis
+    [List all instances of color references with page/paragraph references]
+    
+    ### Key Metrics
+    [Table of component colors with context]
+    
+    ### Summary
+    [Concise 3-5 paragraph summary of connector colors]
+    
+    ### Structured Representation
+    REASONING: [Key determinations]  
+    COLOUR: [color/multi/NOT FOUND]
+    
+    ## Additional Guidelines
+    - Maintain factual accuracy - quote directly when appropriate
+    - Do not infer information not present in the document
+    - Note any ambiguities or unclear sections
+    - If information is not available, state this explicitly
+    - {additional_instructions}
+  required_variables:
+    - document_content
+    - target_entity
+    - summary_topic
