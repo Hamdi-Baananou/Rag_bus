@@ -44,4 +44,5 @@ prompt: "Determine Colour Coding using this reasoning chain:
     Output format:
     REASONING: [Step analysis summary]  
     COLOUR CODING: [Color/none/NOT FOUND]
+    
     Document: {document_content}"
