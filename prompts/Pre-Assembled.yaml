@@ -1,54 +1,53 @@
 prompt: "Extract pre-assembly status using this reasoning chain:
-STEP 1: ASSEMBLY IDENTIFICATION
-- Scan for key terms:
-  ✓ \"Delivered as an assembly\"
-  ✓ \"Requires disassembly in production\"
-  ✓ \"Pre-assembled\" (context-dependent)
-  ✓ Components: TPA, CPA, lever, etc.
+   STEP 1: ASSEMBLY IDENTIFICATION
+   - Scan for key terms:
+     ✓ \"Delivered as an assembly\"
+     ✓ \"Requires disassembly in production\"
+     ✓ \"Pre-assembled\" (context-dependent)
+     ✓ Components: TPA, CPA, lever, etc.
 
-STEP 2: DISASSEMBLY CONTEXT VALIDATION
-- For \"Yes\":
-  ✓ Explicit disassembly requirement for production use
-  ✓ Full connector assembly needing breakdown
-- For \"No\":
-  ✓ Preassembled components (TPA/CPA/lever) with no disassembly needed
-  ✓ Statements like \"ready-to-use assembly\"
+   STEP 2: DISASSEMBLY CONTEXT VALIDATION
+   - For \"Yes\":
+     ✓ Explicit disassembly requirement for production use
+     ✓ Full connector assembly needing breakdown
+   - For \"No\":
+     ✓ Preassembled components (TPA/CPA/lever) with no disassembly needed
+     ✓ Statements like \"ready-to-use assembly\"
 
-STEP 3: COMPONENT VS FULL ASSEMBLY
-- Differentiate:
-  ✓ Full connector assembly → Check for disassembly mandates
-  ✓ Individual components → Check if they're add-ons requiring removal
+   STEP 3: COMPONENT VS FULL ASSEMBLY
+   - Differentiate:
+     ✓ Full connector assembly → Check for disassembly mandates
+     ✓ Individual components → Check if they're add-ons requiring removal
 
-STEP 4: EXPLICIT STATEMENT PRIORITIZATION
-- Hierarchy of evidence:
-  1. Direct disassembly instructions (\"Must disassemble before installation\")
-  2. Delivery format (\"Shipped fully assembled\")
-  3. Component mentions without disassembly context
+   STEP 4: EXPLICIT STATEMENT PRIORITIZATION
+   - Hierarchy of evidence:
+     1. Direct disassembly instructions (\"Must disassemble before installation\")
+     2. Delivery format (\"Shipped fully assembled\")
+     3. Component mentions without disassembly context
 
-STEP 5: FINAL CLASSIFICATION
-- Return \"Yes\" ONLY if:
-  1. Full assembly delivered AND
-  2. Explicit disassembly required for production
-- Return \"No\" if:
-  1. Components preassembled BUT
-  2. No full disassembly needed
-- Default to NOT FOUND otherwise
+   STEP 5: FINAL CLASSIFICATION
+   - Return \"Yes\" ONLY if:
+     1. Full assembly delivered AND
+     2. Explicit disassembly required for production
+   - Return \"No\" if:
+     1. Components preassembled BUT
+     2. No full disassembly needed
+   - Default to NOT FOUND otherwise
 
-Examples:
-\"Fully assembled connector; disassemble terminals before wiring\"
-→ REASONING: [Step1] Assembly + disassembly → [Step5] Yes 
-→ PRE-ASSEMBLED: Yes
+   Examples:
+   \"Fully assembled connector; disassemble terminals before wiring\"
+   → REASONING: [Step1] Assembly + disassembly → [Step5] Yes 
+   → PRE-ASSEMBLED: Yes
 
-\"Includes preassembled CPA latch (no disassembly required)\"
-→ REASONING: [Step2] Component-only → [Step5] No 
-→ PRE-ASSEMBLED: No
+   \"Includes preassembled CPA latch (no disassembly required)\"
+   → REASONING: [Step2] Component-only → [Step5] No 
+   → PRE-ASSEMBLED: No
 
-\"Modular housing with TPA\"
-→ REASONING: [Step1] No disassembly context → [Step5] Default 
-→ PRE-ASSEMBLED: NOT FOUND
+   \"Modular housing with TPA\"
+   → REASONING: [Step1] No disassembly context → [Step5] Default 
+   → PRE-ASSEMBLED: NOT FOUND
 
-Output format:
-REASONING: [Key determinations]  
-PRE-ASSEMBLED: [Yes/No/NOT FOUND]
-
-Document: {document_content}"
+   Output format:
+   REASONING: [Key determinations]  
+   PRE-ASSEMBLED: [Yes/No/NOT FOUND]
+   Document: {document_content}"

@@ -1,54 +1,53 @@
 prompt: "Extract sealing status using this reasoning chain:
-STEP 1: IP CODE EXTRACTION
-- Scan for ISO 20653/IP codes:
-  ✓ Valid codes: IPx0, IPx4, IPx4K, IPx5, IPx6, IPx6K, IPx7, IPx8, IPx9, IPx9K
-  ✗ Ignore: IPx1, IPx2, IPx3
+   STEP 1: IP CODE EXTRACTION
+   - Scan for ISO 20653/IP codes:
+     ✓ Valid codes: IPx0, IPx4, IPx4K, IPx5, IPx6, IPx6K, IPx7, IPx8, IPx9, IPx9K
+     ✗ Ignore: IPx1, IPx2, IPx3
 
-STEP 2: IP-BASED CLASSIFICATION
-- If valid IP codes found:
-  → IPx0 → **Unsealed**
-  → Any other valid code → **Sealed**
-- If multiple IP codes:
-  → Use highest protection level (e.g., IPx9K > IPx7)
+   STEP 2: IP-BASED CLASSIFICATION
+   - If valid IP codes found:
+     → IPx0 → **Unsealed**
+     → Any other valid code → **Sealed**
+   - If multiple IP codes:
+     → Use highest protection level (e.g., IPx9K > IPx7)
 
-STEP 3: FUNCTIONAL SEALING INDICATORS
-- If no valid IP codes:
-  ✓ Check for sealing features:
-    * \"Waterproof\"/\"dustproof\"
-    * \"Sealed\"/\"gasket\"/\"O-ring\"
-    * \"Environmental protection\"
-  ✓ Check for explicit negatives:
-    * \"Unsealed\"/\"no sealing\"
+   STEP 3: FUNCTIONAL SEALING INDICATORS
+   - If no valid IP codes:
+     ✓ Check for sealing features:
+       * \"Waterproof\"/\"dustproof\"
+       * \"Sealed\"/\"gasket\"/\"O-ring\"
+       * \"Environmental protection\"
+     ✓ Check for explicit negatives:
+       * \"Unsealed\"/\"no sealing\"
 
-STEP 4: CONFLICT RESOLUTION
-- Priority hierarchy:
-  1. IP codes (STEP 2)
-  2. Explicit functional terms (STEP 3)
-  3. Default to NOT FOUND
+   STEP 4: CONFLICT RESOLUTION
+   - Priority hierarchy:
+     1. IP codes (STEP 2)
+     2. Explicit functional terms (STEP 3)
+     3. Default to NOT FOUND
 
-STEP 5: FINAL VALIDATION
-- **Sealed** requires:
-  ✓ IP code ≥IPx4 OR
-  ✓ Functional sealing description
-- **Unsealed** requires:
-  ✓ IPx0 OR
-  ✓ Explicit lack of sealing
+   STEP 5: FINAL VALIDATION
+   - **Sealed** requires:
+     ✓ IP code ≥IPx4 OR
+     ✓ Functional sealing description
+   - **Unsealed** requires:
+     ✓ IPx0 OR
+     ✓ Explicit lack of sealing
 
-Examples:
-\"IPx9K-rated for high-pressure washdown\"
-→ REASONING: [Step1] IPx9K → [Step2] Sealed 
-→ SEALING: Sealed
+   Examples:
+   \"IPx9K-rated for high-pressure washdown\"
+   → REASONING: [Step1] IPx9K → [Step2] Sealed 
+   → SEALING: Sealed
 
-\"No IP rating but includes silicone gasket\"
-→ REASONING: [Step1] No IP → [Step3] Gasket → Sealed 
-→ SEALING: Sealed
+   \"No IP rating but includes silicone gasket\"
+   → REASONING: [Step1] No IP → [Step3] Gasket → Sealed 
+   → SEALING: Sealed
 
-\"IPx0 connector with 'dust-resistant' claim\"
-→ REASONING: [Step1] IPx0 → [Step4] Overrides description → Unsealed 
-→ SEALING: Unsealed
+   \"IPx0 connector with 'dust-resistant' claim\"
+   → REASONING: [Step1] IPx0 → [Step4] Overrides description → Unsealed 
+   → SEALING: Unsealed
 
-Output format:
-REASONING: [Key determinations]  
-SEALING: [Sealed/Unsealed/NOT FOUND]
-
-Document: {document_content}"
+   Output format:
+   REASONING: [Key determinations]  
+   SEALING: [Sealed/Unsealed/NOT FOUND]
+   Document: {document_content}"

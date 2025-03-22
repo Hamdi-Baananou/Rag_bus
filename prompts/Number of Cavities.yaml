@@ -1,54 +1,53 @@
 prompt: "Extract cavity count using this reasoning chain:
-STEP 1: CAVITY IDENTIFICATION
-- Scan document sections for:
-  ✓ Title block annotations (1-CAVITY, 3-POSITION)
-  ✓ Housing diagrams with position markers
-  ✓ Part number suffixes (-2C, -4P, -6W)
-  ✓ Technical specifications (\"4-way connector\")
+    STEP 1: CAVITY IDENTIFICATION
+    - Scan document sections for:
+      ✓ Title block annotations (1-CAVITY, 3-POSITION)
+      ✓ Housing diagrams with position markers
+      ✓ Part number suffixes (-2C, -4P, -6W)
+      ✓ Technical specifications (\"4-way connector\")
 
-STEP 2: IRRELEVANT NUMBER FILTERING
-- Explicitly ignore:
-  ✗ Temperature classes (C125, T40)
-  ✗ Version numbers (Ver 2.1)
-  ✗ Unrelated codes (IP67, UL94V-0)
-  ✗ Quantity indicators (\"Qty: 50\")
+    STEP 2: IRRELEVANT NUMBER FILTERING
+    - Explicitly ignore:
+      ✗ Temperature classes (C125, T40)
+      ✗ Version numbers (Ver 2.1)
+      ✗ Unrelated codes (IP67, UL94V-0)
+      ✗ Quantity indicators (\"Qty: 50\")
 
-STEP 3: CONFLICT RESOLUTION
-- For multiple candidates:
-  1. Apply document hierarchy:
-     • Latest revision date
-     • Engineering drawings > Marketing docs
-  2. Prefer physical labels over part numbers
-  3. Use highest explicit number when ambiguous
+    STEP 3: CONFLICT RESOLUTION
+    - For multiple candidates:
+      1. Apply document hierarchy:
+         • Latest revision date
+         • Engineering drawings > Marketing docs
+      2. Prefer physical labels over part numbers
+      3. Use highest explicit number when ambiguous
 
-STEP 4: CAVITY SYNONYM RESOLUTION
-- Map terms to numbers:
-  ✓ \"Single-cavity\"/\"1-posn\"/\"1-way\" → 1
-  ✓ \"Dual\"/\"2P\"/\"Two-position\" → 2
-  ✓ \"Triple\"/\"3C\"/\"Three-cav\" → 3
-- Reject non-standard terms (\"Multi-port\")
+    STEP 4: CAVITY SYNONYM RESOLUTION
+    - Map terms to numbers:
+      ✓ \"Single-cavity\"/\"1-posn\"/\"1-way\" → 1
+      ✓ \"Dual\"/\"2P\"/\"Two-position\" → 2
+      ✓ \"Triple\"/\"3C\"/\"Three-cav\" → 3
+    - Reject non-standard terms (\"Multi-port\")
 
-STEP 5: FINAL VALIDATION
-- Confirm:
-  1. Positive integer (≥1)
-  2. From approved sources (title block/diagram/PN)
-  3. No conflicting evidence in latest doc
+    STEP 5: FINAL VALIDATION
+    - Confirm:
+      1. Positive integer (≥1)
+      2. From approved sources (title block/diagram/PN)
+      3. No conflicting evidence in latest doc
 
-Examples:
-\"Housing: 4-CAVITY (DW-123 Rev.3)\"
-→ REASONING: [Step1] Title block → [Step3] Latest rev → [Step5] Valid 
-→ NUMBER OF CAVITIES: 4
+    Examples:
+    \"Housing: 4-CAVITY (DW-123 Rev.3)\"
+    → REASONING: [Step1] Title block → [Step3] Latest rev → [Step5] Valid 
+    → NUMBER OF CAVITIES: 4
 
-\"PN: XT-60-2P (marketing sheet: 3-way)\"
-→ REASONING: [Step1] Conflict → [Step3] Prefer PN suffix → [Step4] 2P=2 
-→ NUMBER OF CAVITIES: 2
+    \"PN: XT-60-2P (marketing sheet: 3-way)\"
+    → REASONING: [Step1] Conflict → [Step3] Prefer PN suffix → [Step4] 2P=2 
+    → NUMBER OF CAVITIES: 2
 
-\"Single-row connector (no numbers)\"
-→ REASONING: [Step1] No indicators → [Step5] Default 
-→ NUMBER OF CAVITIES: 999
+    \"Single-row connector (no numbers)\"
+    → REASONING: [Step1] No indicators → [Step5] Default 
+    → NUMBER OF CAVITIES: 999
 
-Output format:
-REASONING: [Key determinations]  
-NUMBER OF CAVITIES: [value/999]
-
-Document: {document_content}"
+    Output format:
+    REASONING: [Key determinations]  
+    NUMBER OF CAVITIES: [value/999]
+    Document: {document_content}"

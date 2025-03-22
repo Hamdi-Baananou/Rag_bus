@@ -1,32 +1,32 @@
 prompt: "Determine connector gender using this reasoning chain:
     STEP 1: TERMINAL TYPE IDENTIFICATION
     - Scan for:
-      ✓ Explicit gender terms: "male"/"female"/"unisex"/"hybrid"
+      ✓ Explicit gender terms: \"male\"/\"female\"/\"unisex\"/\"hybrid\"
       ✓ Physical descriptions:
-        * "Pin contacts" → Male
-        * "Socket contacts" → Female
-        * "Tab-and-slot" → Hybrid
+        * \"Pin contacts\" → Male
+        * \"Socket contacts\" → Female
+        * \"Tab-and-slot\" → Hybrid
       ✓ Cavity specifications:
-        * "Dual-position" → Potential Hybrid
-        * "Shared receptacle" → Potential Unisex
+        * \"Dual-position\" → Potential Hybrid
+        * \"Shared receptacle\" → Potential Unisex
 
     STEP 2: CAVITY ARCHITECTURE ANALYSIS
     - For mixed-gender mentions:
       ✓ Check cavity configuration:
-        * "Same cavity accepts both" → Unisex
-        * "Separate cavities for each" → Hybrid
+        * \"Same cavity accepts both\" → Unisex
+        * \"Separate cavities for each\" → Hybrid
       ✓ Verify contact positioning:
-        * "Mating interfaces in single housing" → Unisex
-        * "Dedicated header/receptacle sides" → Hybrid
+        * \"Mating interfaces in single housing\" → Unisex
+        * \"Dedicated header/receptacle sides\" → Hybrid
 
     STEP 3: MANUFACTURER NOMENCLATURE
     - Interpret supplier terminology:
-      * "Plug" → Typically Male
-      * "Receptacle" → Typically Female
-      * "Combo" → Likely Hybrid
+      * \"Plug\" → Typically Male
+      * \"Receptacle\" → Typically Female
+      * \"Combo\" → Likely Hybrid
     - Cross-validate with part numbers:
-      * "-M" suffix → Male
-      * "-F" suffix → Female
+      * \"-M\" suffix → Male
+      * \"-F\" suffix → Female
 
     STEP 4: CONFLICT RESOLUTION
     - Priority hierarchy:
@@ -43,21 +43,20 @@ prompt: "Determine connector gender using this reasoning chain:
       ✓ Unisex: Mixed in same cavity
     - Ambiguous? → NOT FOUND
 
-    **Examples:**
-    - **\"Socket contacts in all positions\"**
-      → REASONING: [Step1 ✓] Socket → [Step3 ✓] Female → [Step5 ✓] Uniform 
-      → GENDER: **Female**
+    Examples:
+    \"Socket contacts in all positions\"
+    → REASONING: [Step1] Socket → Female → [Step5] Uniform 
+    → GENDER: Female
 
-    - **\"Dual cavity design: pins (A1-A10) + sockets (B1-B10)\"**
-      → REASONING: [Step1 ✓] Both types → [Step2 ✓] Separate cavities → [Step5 ✓] Hybrid 
-      → GENDER: **Hybrid**
+    \"Dual cavity design: pins (A1-A10) + sockets (B1-B10)\"
+    → REASONING: [Step1] Both types → [Step2] Separate cavities → [Step5] Hybrid 
+    → GENDER: Hybrid
 
-    - **\"Bi-directional contacts in shared housing\"**
-      → REASONING: [Step1 ✓] Mixed → [Step2 ✓] Same cavity → [Step5 ✓] Unisex 
-      → GENDER: **Unisex**
+    \"Bi-directional contacts in shared housing\"
+    → REASONING: [Step1] Mixed → [Step2] Same cavity → [Step5] Unisex 
+    → GENDER: Unisex
 
-    **Output format:**  
-    REASONING: [Step analysis with ✓/✗ markers]  
+    Output format:
+    REASONING: [Step analysis summary]
     GENDER: [Male/Female/Unisex/Hybrid/NOT FOUND]
-
     Document: {document_content}"
