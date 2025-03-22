@@ -304,24 +304,27 @@ with tab5:
 
             if selected_prompt:
                 prompt_text = st.session_state.prompt_manager.get_prompt(selected_prompt)
-                variables = list(set(re.findall(r'\{(\w+)\}', prompt_text)))
+                
+                # Extract all variables except document_content
+                all_variables = list(set(re.findall(r'\{(\w+)\}', prompt_text)))
+                user_variables = [var for var in all_variables if var != 'document_content']
+                
+                if 'document_content' in all_variables:
+                    st.info("This prompt contains a {document_content} variable that will be automatically populated from retrieved documents.")
+                
+                # Only show inputs for non-document variables
                 st.subheader("Prompt Variables")
                 variables_dict = {}
-                for var in variables:
-                    if var == 'document_content':
-                        variables_dict[var] = st.text_area(var, height=150)
-                    else:
-                        variables_dict[var] = st.text_input(var)
+                for var in user_variables:
+                    variables_dict[var] = st.text_input(var)
                 
-                # Add button to add this prompt to the queue - THIS IS THE NEW CODE
+                # Add button to add this prompt to the queue
                 if st.button("Add to Prompt Queue"):
-                    # Make sure all variables are filled
-                    if all(variables_dict.values()):
-                        # Format the prompt with variables
-                        formatted_prompt = st.session_state.prompt_manager.format_prompt(
-                            selected_prompt, variables_dict
-                        )
-                        
+                    # Check if vector store exists
+                    if st.session_state.vector_store is None:
+                        st.error("Please upload and process documents first before adding prompts to the queue")
+                    # Make sure all user variables are filled
+                    elif all(variables_dict.values()) or not user_variables:
                         # Add to queue
                         if "prompt_batch_queue" not in st.session_state:
                             st.session_state.prompt_batch_queue = []
@@ -329,7 +332,7 @@ with tab5:
                         st.session_state.prompt_batch_queue.append({
                             "prompt_name": selected_prompt,
                             "variables": variables_dict,
-                            "formatted_prompt": formatted_prompt
+                            "has_document_var": 'document_content' in all_variables
                         })
                         
                         st.success(f"Added prompt '{selected_prompt}' to the queue")
@@ -340,7 +343,8 @@ with tab5:
         st.subheader("Create New Prompt Template")
         
         new_prompt_name = st.text_input("Prompt Name (no spaces)")
-        new_prompt_template = st.text_area("Template", height=200, help="Use {variable_name} syntax for variables")
+        new_prompt_template = st.text_area("Template", height=200, 
+                                         help="Use {variable_name} syntax for variables. Use {document_content} to include retrieved documents.")
         if st.button("Save Prompt Template"):
             if not new_prompt_name or not new_prompt_template:
                 st.error("Prompt name and template are required")
@@ -368,6 +372,8 @@ with tab5:
                         st.write(f"- {k}: {str(v)[:50]}...")
                     else:
                         st.write(f"- {k}: {v}")
+                if item.get('has_document_var', False):
+                    st.write("_This prompt will use retrieved document content_")
         
         if st.button("Process Batch Queue") and st.session_state.vector_store:
             if not api_key:
@@ -395,8 +401,35 @@ with tab5:
                     status_text.text(f"Processing prompt {i+1}/{len(st.session_state.prompt_batch_queue)}...")
                     
                     try:
-                        # Use the formatted prompt as the question
-                        result = llm_service.ask_question(item['formatted_prompt'], retriever)
+                        # Get the prompt template
+                        prompt_template = st.session_state.prompt_manager.get_prompt(item['prompt_name'])
+                        
+                        # If it has document_content variable, we need to retrieve docs and format
+                        if item.get('has_document_var', False):
+                            # Construct a question from the variables to use for retrieval
+                            # You might need to adjust this logic based on your specific needs
+                            question = " ".join(item['variables'].values()) if item['variables'] else "retrieve relevant documents"
+                            
+                            # Get relevant documents
+                            docs = retriever.get_relevant_documents(question)
+                            doc_content = "\n\n".join([doc.page_content for doc in docs])
+                            
+                            # Add document content to variables
+                            variables = item['variables'].copy()
+                            variables['document_content'] = doc_content
+                            
+                            # Format the prompt with all variables including document content
+                            formatted_prompt = st.session_state.prompt_manager.format_prompt(
+                                item['prompt_name'], variables
+                            )
+                        else:
+                            # Just format with the user-provided variables
+                            formatted_prompt = st.session_state.prompt_manager.format_prompt(
+                                item['prompt_name'], item['variables']
+                            )
+                        
+                        # Get answer from LLM
+                        result = llm_service.ask_question(formatted_prompt, retriever)
                         
                         batch_results.append({
                             "prompt_name": item['prompt_name'],
@@ -408,7 +441,7 @@ with tab5:
                         # Evaluate answer if enabled
                         if enable_answer_eval:
                             st.session_state.evaluation_service.evaluate_answer(
-                                item['formatted_prompt'], result
+                                formatted_prompt, result
                             )
                             
                     except Exception as e:
