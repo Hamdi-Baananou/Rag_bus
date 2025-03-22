@@ -74,6 +74,7 @@ with st.sidebar:
 # Main functionality in tabs
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Upload PDFs", "Ask Questions", "Batch Processing", "Evaluation Results", "Prompt Templates"])
 
+# In the tab1 section where you process documents:
 with tab1:
     st.header("Upload and Process Documents")
     uploaded_files = st.file_uploader("Upload PDF Documents", type="pdf", accept_multiple_files=True)
@@ -99,23 +100,31 @@ with tab1:
                     st.session_state.vector_store = vector_store
                     retriever = vector_store.setup_chroma(documents)
                     
+                    # Get and display vector store stats
+                    stats = vector_store.get_stats()
+                    
+                    # Create metrics display
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Total Chunks Created", stats["chunks_count"])
+                    with col2:
+                        st.metric("Total Embeddings Generated", stats["embedding_count"])
+                    
                     # Log to event bus
                     st.session_state.event_bus.publish("documents_processed", {
                         "num_documents": len(documents),
-                        "document_names": [doc.metadata.get("source") for doc in documents]
+                        "document_names": [doc.metadata.get("source") for doc in documents],
+                        "chunks_count": stats["chunks_count"],
+                        "embedding_count": stats["embedding_count"]
                     })
                     
-                    st.session_state.processing_status = f"Successfully processed {len(documents)} documents"
+                    st.session_state.processing_status = f"Successfully processed {len(documents)} documents creating {stats['chunks_count']} chunks with {stats['embedding_count']} embeddings"
                     st.success(st.session_state.processing_status)
                     
                 except Exception as e:
                     st.error(f"Error processing documents: {str(e)}")
         else:
             st.error("Please upload at least one PDF file")
-    
-    # Display processing status
-    if st.session_state.processing_status:
-        st.info(st.session_state.processing_status)
 
 with tab2:
     st.header("Ask Questions")
@@ -260,13 +269,31 @@ with tab4:
         st.subheader("System Performance")
         
         # Create metrics display
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Total Queries", evaluation_data.get("processed_queries", 0))
         with col2:
             st.metric("Avg. Latency", f"{evaluation_data.get('avg_latency', 0):.2f}s")
         with col3:
             st.metric("Total Tokens Used", evaluation_data.get("total_tokens", 0))
+        with col4:
+            if st.session_state.vector_store:
+                stats = st.session_state.vector_store.get_stats()
+                st.metric("Total Chunks", stats["chunks_count"])
+        
+        # Add Vector Store stats section
+        if st.session_state.vector_store:
+            st.subheader("Vector Store Statistics")
+            stats = st.session_state.vector_store.get_stats()
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Total Chunks", stats["chunks_count"])
+            with col2:
+                st.metric("Total Embeddings", stats["embedding_count"])
+            
+            st.info(f"Collection Name: {stats['collection_name']}")
+        
         
         # Add more detailed evaluation data as needed
         if evaluation_data.get("answer_quality_scores"):
