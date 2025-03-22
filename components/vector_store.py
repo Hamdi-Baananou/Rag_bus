@@ -85,10 +85,10 @@ class VectorStore:
         
         # Return current model info
         return {"model": model_name, "device": device}
-    
-    def configure_retriever(self, k=3, search_type="similarity", score_threshold=None,filter_criteria=None, include_metadata=True):
 
-         """
+    
+    def configure_retriever(self, k=3, search_type="similarity", score_threshold=None, filter_criteria=None, include_metadata=True):
+    """
     Configure retrieval parameters for better search results
     
     Args:
@@ -101,23 +101,25 @@ class VectorStore:
     Returns:
         Retriever: Configured retriever object
     """
+    if self.retriever is None:
+        raise ValueError("Retriever not initialized. Process documents first.")
+    
+    search_kwargs = {
+        "k": k,
+        "filter": filter_criteria
+    }
+    search_kwargs = {k: v for k, v in search_kwargs.items() if v is not None}
+    
+    self.retriever = Chroma(
+        collection_name=self.collection_name,
+        client=self.client,
+        embedding_function=self.embedding_function
+    ).as_retriever(search_type=search_type, search_kwargs=search_kwargs)
+    
+    return self.retriever
 
-        if self.retriever is None:
-            
-            raise ValueError("Retriever not initialized. Process documents first.")
-            
-        search_kwargs = {
-            "k": k,
-            "filter": filter_criteria}
-            
-        search_kwargs = {k: v for k, v in search_kwargs.items() if v is not None}
-        
-        self.retriever = Chroma(
-            collection_name=self.collection_name,
-            client=self.client,
-            embedding_function=self.embedding_function).as_retriever(search_type=search_type,search_kwargs=search_kwargs)
-            
-        return self.retriever
+    
+
     
     def process_documents(self, documents, use_advanced_chunking=False):
         """
