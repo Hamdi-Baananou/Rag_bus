@@ -321,15 +321,15 @@ with tab5:
         if st.button("Save Prompt Template"):
             if not new_prompt_name or not new_prompt_template:
                 st.error("Prompt name and template are required")
-                else:
-                    try:
-                        os.makedirs("prompts", exist_ok=True)
-                        with open(f"prompts/{new_prompt_name}.yaml", "w", encoding="utf-8") as f:
-                            yaml.dump({"prompt": new_prompt_template}, f)
-                        st.session_state.prompt_manager._load_prompts()
-                        st.success(f"Prompt template '{new_prompt_name}' created successfully")
-                    except Exception as e:
-                        st.error(f"Error creating prompt: {str(e)}")
+            else:
+                try:
+                    os.makedirs("prompts", exist_ok=True)
+                    with open(f"prompts/{new_prompt_name}.yaml", "w", encoding="utf-8") as f:
+                        yaml.dump({"prompt": new_prompt_template}, f)
+                    st.session_state.prompt_manager._load_prompts()
+                    st.success(f"Prompt template '{new_prompt_name}' created successfully")
+                except Exception as e:
+                    st.error(f"Error creating prompt: {str(e)}")
     
     # Batch Queue Management (if using existing prompts)
     if prompt_action == "Use existing prompts" and "prompt_batch_queue" in st.session_state and st.session_state.prompt_batch_queue:
