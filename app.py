@@ -12,7 +12,7 @@ from components.vector_store import VectorStore
 from components.llm_service import LLMService
 from components.event_bus import EventBus
 from components.evaluation import EvaluationService
-from components.prompt_manager import PromptManager
+from components.simple_prompt_manager import PromptManager
 
 # Configure page
 st.set_page_config(
@@ -35,7 +35,7 @@ if "extraction_results" not in st.session_state:
 if "processing_status" not in st.session_state:
     st.session_state.processing_status = ""
 if "prompt_manager" not in st.session_state:
-    st.session_state.prompt_manager = PromptManager()
+    st.session_state.prompt_manager = SimplePromptManager()
 if "prompt_batch_queue" not in st.session_state:
     st.session_state.prompt_batch_queue = []
 if "batch_results" not in st.session_state:
@@ -303,8 +303,7 @@ with tab5:
             selected_prompt = st.selectbox("Select Prompt Template", available_prompts)
             
             if selected_prompt:
-                prompt_info = st.session_state.prompt_manager.get_prompt_info(selected_prompt)
-                
+                prompt_text = st.session_state.prompt_manager.get_prompt(selected_prompt)                
                 st.subheader("Prompt Information")
                 st.write(f"**Description:** {prompt_info['description']}")
                 
