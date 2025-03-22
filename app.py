@@ -12,7 +12,7 @@ from components.vector_store import VectorStore
 from components.llm_service import LLMService
 from components.event_bus import EventBus
 from components.evaluation import EvaluationService
-from components.simple_prompt_manager import SimplePromptManager
+from components.prompt_manager import SimplePromptManager
 
 # Configure page
 st.set_page_config(
