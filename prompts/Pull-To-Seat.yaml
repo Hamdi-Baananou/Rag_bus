@@ -1,0 +1,59 @@
+prompt: "Extract Pull-To-Seat requirement using this reasoning chain:
+    STEP 1: ACTION IDENTIFICATION
+    - Scan for:
+      ✓ Explicit \"pull-to-seat\" mentions
+      ✓ Terminal insertion process descriptions:
+        * \"Pull-back assembly required\"
+        * \"Tug-lock mechanism\"
+        * \"Retract-to-secure\"
+      ✓ Alternative methods:
+        * \"Pre-inserted terminals\"
+        * \"Tool-free insertion\"
+        * \"Push-fit design\"
+
+    STEP 2: OPERATIONAL CONTEXT VALIDATION
+    - Confirm mentions relate to PRIMARY ASSEMBLY:
+      ✓ Terminal/wire installation
+      ✓ Final seating action
+      ✗ Maintenance/removal procedures
+      ✗ Secondary locking mechanisms
+
+    STEP 3: NEGATION HANDLING
+    - Check for explicit denials:
+      ✓ \"No pull-to-seat required\"
+      ✓ \"Self-retaining terminals\"
+      ✓ \"Zero-stroke insertion\"
+    - Verify no contradictory claims
+
+    STEP 4: ASSEMBLY CONTEXT CONFIRMATION
+    - Required pull action must be:
+      ✓ Final assembly step
+      ✓ Necessary for terminal retention
+      ✓ Performed by installer (not tool)
+    - If tool-assisted pull: Treat as \"No\"
+
+    STEP 5: FINAL VERIFICATION
+    - Meets ALL criteria:
+      1. Explicit pull action requirement ✓
+      2. Assembly-phase context ✓
+      3. No alternative retention methods ✓
+    - Any ambiguity → Default to \"No\"
+
+    **Examples:**
+    - **\"Terminals require pull-back action for seating\"**
+      → REASONING: [Step1] Pull-back → [Step2] Assembly → [Step4] Manual action 
+      → PULL-TO-SEAT: **Yes**
+
+    - **\"Pre-inserted contacts with CPA secondary lock\"**
+      → REASONING: [Step1] Pre-inserted → [Step3] Alternative method 
+      → PULL-TO-SEAT: **No**
+
+    - **\"Secure insertion method\"**
+      → REASONING: [Step1] Vague → [Step5] Ambiguous 
+      → PULL-TO-SEAT: **No**
+
+    **Output format:**  
+    REASONING: [Key step determinations]  
+    PULL-TO-SEAT: [Yes/No]
+
+    Document: {document_content}"

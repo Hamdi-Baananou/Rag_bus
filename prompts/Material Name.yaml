@@ -1,0 +1,51 @@
+prompt: "Extract primary polymer material using this reasoning chain:
+    STEP 1: MATERIAL IDENTIFICATION
+    - Scan for:
+      ✓ Explicit polymer declarations (PA66, PBT, etc.)
+      ✓ Composite notations (PA6-GF30, PPS-MF15)
+      ✓ Additive markers (GF, GB, MF, T)
+      ✓ Weight percentages (PA(70%), PBT(30%))
+
+    STEP 2: BASE MATERIAL ISOLATION
+    - Remove additives/fillers from composite names:
+      PA66-GF30 → PA66
+      LCP-MF45 → LCP
+    - If additives-only mentioned (GF40): 
+      → Check context for base polymer
+      → Else: NOT FOUND
+
+    STEP 3: WEIGHT HIERARCHY ANALYSIS
+    - Compare numerical weights when present:
+      PA66(55%)/PA6(45%) → PA66
+    - No weights? Use declaration order:
+      \"Primary material: PPS, Secondary: LCP\" → PPS
+
+    STEP 4: SPECIFICITY RESOLUTION
+    - Prefer exact grades:
+      PA66 > PA6 > PA
+      PPSU > PPS
+    - Handle generics:
+      \"Thermoplastic\" + GF → PA
+      \"High-temp polymer\" → PPS
+
+    STEP 5: VALIDATION
+    - Confirm single material meets ALL:
+      1. Base polymer identification
+      2. Weight/declaration priority
+      3. Specificity requirements
+    - Uncertain? → NOT FOUND
+
+    **Examples:**
+    - **\"Connector: PA6-GF30 (60% resin)\"**
+      → REASONING: [Step1 ✓] PA6+GF → [Step2 ✓] PA6 → [Step3 ✓] 60% → [Step4 ✓] Specific grade → [Step5 ✓] Validated 
+      → MATERIAL NAME: **PA6**
+
+    - **\"Housing: GF40 Polymer\"**
+      → REASONING: [Step1 ✓] GF additive → [Step2 ✗] No base polymer → [Step5 ✗] Uncertain 
+      → MATERIAL NAME: **NOT FOUND**
+
+    **Output format:**  
+    REASONING: [Step analysis with ✓/✗ markers]  
+    MATERIAL NAME: [UPPERCASE]
+
+    Document: {document_content}"

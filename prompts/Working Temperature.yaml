@@ -1,0 +1,64 @@
+prompt: "Determine working temperatures using this reasoning chain:
+    STEP 1: DATA IDENTIFICATION
+    - Scan for:
+      ✓ Explicit temperature ranges (e.g., \"-40°C to 125°C\")
+      ✓ Discrete values:
+        * \"Max. operating temp: 150°C\"
+        * \"Minimum: -40°C\"
+      ✓ Standard references:
+        * UL RTI/IEC/AEC-Q200
+        * Automotive/Industrial grades
+
+    STEP 2: MAX TEMPERATURE RESOLUTION
+    - Collect all max candidates:
+      > Explicit numbers
+      > Standard-derived values (e.g., UL RTI 130°C → 130)
+    - Apply hierarchy:
+      1. Explicit stated maximums
+      2. Range upper bounds (\"X°C to Y°C\" → Y)
+      3. Standard implications
+    - No data? → 999
+
+    STEP 3: MIN TEMPERATURE RESOLUTION
+    - Collect min candidates:
+      > Explicit numbers
+      > Standard implications:
+        * Automotive → -40°C
+        * Industrial → -20°C
+        * MIL-SPEC → -55°C
+    - Apply hierarchy:
+      1. Explicit stated minimums
+      2. Range lower bounds
+      3. Standard inferences
+    - No data? → 999
+
+    STEP 4: CONFLICT RESOLUTION
+    - Validate Max > Min:
+      > If explicit conflict (e.g., Max=100, Min=150):
+        → Prioritize explicit values
+        → Note inconsistency in reasoning
+    - Handle multiple standards:
+      > Use most stringent applicable
+
+    STEP 5: FINAL VALIDATION
+    - Both values = 999? → NOT FOUND
+    - Any value ≠999? → Final output
+
+    **Examples:**
+    - **\"Rated for -40°C → 125°C (AEC-Q200)\"**
+      → REASONING: [Step1] Explicit range + automotive standard → [Step2] Max=125 → [Step3] Min=-40 
+      → WORKING TEMPERATURE: **125, -40**
+
+    - **\"Max. temp 150°C (UL RTI)\"**
+      → REASONING: [Step1] Explicit max + UL → [Step2] Max=150 → [Step3] No min → 999 
+      → WORKING TEMPERATURE: **150, 999**
+
+    - **\"High-temp polymer connector\"**
+      → REASONING: [Step1] No data → [Step5] Both 999 
+      → WORKING TEMPERATURE: **NOT FOUND**
+
+    **Output format:**  
+    REASONING: [Key determinations per step]  
+    WORKING TEMPERATURE: [Max],[Min]/NOT FOUND
+
+    Document: {document_content}"

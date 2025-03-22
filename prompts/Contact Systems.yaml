@@ -1,0 +1,54 @@
+prompt: "Identify approved contact systems using this reasoning chain:
+    STEP 1: SOURCE IDENTIFICATION
+    - Scan for:
+      ✓ Explicit system families (MQS, MLK, SLK, etc.)
+      ✓ Terminal part numbers (123-4567, XW3D-XXXX-XX)
+      ✓ Manufacturer approval statements:
+        * \"Approved for use with...\"
+        * \"Compatible contact systems:\"
+        * \"Recommended mating system\"
+
+    STEP 2: MANUFACTURER PRIORITIZATION
+    - Verify mentions are supplier-specified:
+      ✓ Direct manufacturer recommendations
+      ✗ Customer-specific part numbers
+      ✗ Generic terminal references
+
+    STEP 3: SYSTEM RESOLUTION HIERARCHY
+    1. Primary: Explicit family mentions (MQS 0.64)
+    2. Secondary: Part number mapping:
+       - Cross-reference with manufacturer catalogs
+       - Match patterns (e.g., 928321-1 → TE MCP 1.2)
+    3. Reject unidentifiable part numbers
+
+    STEP 4: MULTI-SYSTEM VALIDATION
+    - Check for:
+      ✓ Multiple approval statements
+      ✓ Hybrid connector systems
+      ✓ Generation variants (MQS Gen2 vs Gen3)
+    - Require explicit documentation for each system
+
+    STEP 5: STANDARDIZATION CHECK
+    - Convert to manufacturer nomenclature:
+      \"Micro Quadlock\" → MQS
+      \"H-MTD\" → HMTD
+    - Maintain versioning: MLK 1.2 ≠ MLK 2.0
+
+    **Examples:**
+    - **\"Approved systems: MQS 0.64 & SLK 2.8 (P/N 345-789)\"**
+      → REASONING: [Step1] MQS/SLK explicit → [Step2] Approved → [Step5] Standardized 
+      → CONTACT SYSTEMS: **MQS 0.64,SLK 2.8**
+
+    - **\"Terminals: 927356-1 (MCP series)\"**
+      → REASONING: [Step1] Part number → [Step3] Mapped to MCP → [Step2] Implicit approval 
+      → CONTACT SYSTEMS: **MCP**
+
+    - **\"Compatible with various 2.8mm systems\"**
+      → REASONING: [Step1] Vague → [Step5] Non-specific → [Final] NOT FOUND 
+      → CONTACT SYSTEMS: **NOT FOUND**
+
+    **Output format:**  
+    REASONING: [Key determinations]  
+    CONTACT SYSTEMS: [system1,system2,.../NOT FOUND]
+
+    Document: {document_content}"

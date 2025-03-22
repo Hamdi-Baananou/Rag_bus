@@ -1,0 +1,58 @@
+prompt: "Determine connector color using this reasoning chain:
+    STEP 1: PART TYPE CLASSIFICATION
+    - Identify from:
+      ✓ \"Assembled\"/\"Multi-component\" → Assembly
+      ✓ \"Housing\"/\"Single-piece\" → Connector body
+      ✓ Component lists with separate colors
+
+    STEP 2: COLOR SOURCE SELECTION
+    - For ASSEMBLIES:
+      > Analyze all components (housing, latches, seals)
+      > Ignore non-structural elements (labels, markings)
+    - For SINGLE-PIECE:
+      > Focus on housing material description
+      > Ignore contact/terminal colors
+
+    STEP 3: DOMINANCE ANALYSIS
+    - Evaluate color references:
+      ✓ Quantitative: \"70% black cover\"
+      ✓ Qualitative: \"primary color\", \"main housing\"
+      ✓ Visual hierarchy: \"red base with blue accents\"
+    - Multi-color triggers:
+      * \"Striped\"/\"checkered\" patterns
+      * Equal distribution (\"50-50 split\")
+      * Explicit \"multi-color\" statement
+
+    STEP 4: CONTEXT VALIDATION
+    - Reject ambiguous terms:
+      ✗ \"Natural\" (unless defined)
+      ✗ Material-inferred colors (brass=golden)
+    - Accept only explicitly stated colors:
+      ✓ \"Black housing\"
+      ✓ \"Blue CPA latch\"
+
+    STEP 5: FINAL RESOLUTION
+    - Apply priority:
+      1. Explicit dominant color
+      2. Assembly majority
+      3. Multi-color indicators
+      4. NOT FOUND
+
+    **Examples:**
+    - **\"Black nylon housing with nickel-plated contacts\"**
+      → REASONING: [Step1] Single-piece → [Step2] Housing color → [Step4] Explicit 
+      → COLOUR: **Black**
+
+    - **\"Assembly: White cover (60%), grey base (40%)\"**
+      → REASONING: [Step1] Assembly → [Step3] White dominant → [Step5] Majority 
+      → COLOUR: **White**
+
+    - **\"Red/blue dual-tone design\"**
+      → REASONING: [Step1] Single-piece → [Step3] Equal prominence → [Step5] Multi 
+      → COLOUR: **multi**
+
+    **Output format:**  
+    REASONING: [Key determinations]  
+    COLOUR: [color/multi/NOT FOUND]
+
+    Document: {document_content}"
