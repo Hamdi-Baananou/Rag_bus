@@ -12,7 +12,7 @@ from components.vector_store import VectorStore
 from components.llm_service import LLMService
 from components.event_bus import EventBus
 from components.evaluation import EvaluationService
-from components.simple_prompt_manager import PromptManager
+from components.simple_prompt_manager import SimplePromptManager
 
 # Configure page
 st.set_page_config(
@@ -301,82 +301,35 @@ with tab5:
             st.info("No prompt templates available. Create a new prompt template to get started.")
         else:
             selected_prompt = st.selectbox("Select Prompt Template", available_prompts)
-            
+
             if selected_prompt:
-                prompt_text = st.session_state.prompt_manager.get_prompt(selected_prompt)                
-                st.subheader("Prompt Information")
-                st.write(f"**Description:** {prompt_info['description']}")
-                
-                st.subheader("Variables")
+                prompt_text = st.session_state.prompt_manager.get_prompt(selected_prompt)
+                variables = list(set(re.findall(r'\{(\w+)\}', prompt_text)))
+                st.subheader("Prompt Variables")
                 variables_dict = {}
-                
-                for var in prompt_info['variables']:
-                    is_required = var in prompt_info['required_variables']
-                    label = f"{var} {'(required)' if is_required else ''}"
+                for var in variables:
                     if var == 'document_content':
-                        variables_dict[var] = st.text_area(label, height=150)
-                    else:
-                        variables_dict[var] = st.text_input(label)
-                
-                if st.button("Format Prompt"):
-                    try:
-                        formatted_prompt = st.session_state.prompt_manager.format_prompt(
-                            selected_prompt, variables_dict
-                        )
-                        st.subheader("Formatted Prompt")
-                        st.text_area("Result", formatted_prompt, height=300)
-                        
-                        # Option to add to batch queue
-                        if st.button("Add to Batch Queue"):
-                            if "prompt_batch_queue" not in st.session_state:
-                                st.session_state.prompt_batch_queue = []
-                            
-                            st.session_state.prompt_batch_queue.append({
-                                "prompt_name": selected_prompt,
-                                "variables": variables_dict,
-                                "formatted_prompt": formatted_prompt
-                            })
-                            st.success(f"Added to batch queue. Queue size: {len(st.session_state.prompt_batch_queue)}")
-                            
-                    except Exception as e:
-                        st.error(f"Error formatting prompt: {str(e)}")
+                        variables_dict[var] = st.text_area(var, height=150)
+                        else:
+                            variables_dict[var] = st.text_input(var)
     
     else:  # Create new prompt
         st.subheader("Create New Prompt Template")
         
         new_prompt_name = st.text_input("Prompt Name (no spaces)")
-        new_prompt_desc = st.text_input("Description")
-        new_prompt_template = st.text_area("Template", height=200, 
-                                          help="Use {variable_name} syntax for variables")
-        
-        # Parse variables from template
-        if new_prompt_template:
-            variables = re.findall(r'\{(\w+)\}', new_prompt_template)
-            if variables:
-                st.write("Detected variables:", ", ".join(variables))
-                
-                # Let user select required variables
-                required_vars = st.multiselect("Required Variables", variables)
-            else:
-                st.warning("No variables detected in template. Use {variable_name} syntax.")
-                variables = []
-                required_vars = []
-        
+        new_prompt_template = st.text_area("Template", height=200,help="Use {variable_name} syntax for variables")
         if st.button("Save Prompt Template"):
             if not new_prompt_name or not new_prompt_template:
                 st.error("Prompt name and template are required")
-            else:
-                try:
-                    st.session_state.prompt_manager.create_prompt(
-                        prompt_name=new_prompt_name,
-                        template=new_prompt_template,
-                        description=new_prompt_desc,
-                        variables=variables,
-                        required_variables=required_vars
-                    )
-                    st.success(f"Prompt template '{new_prompt_name}' created successfully")
-                except Exception as e:
-                    st.error(f"Error creating prompt: {str(e)}")
+                else:
+                    try:
+                        os.makedirs("prompts", exist_ok=True)
+                        with open(f"prompts/{new_prompt_name}.yaml", "w", encoding="utf-8") as f:
+                            yaml.dump({"prompt": new_prompt_template}, f)
+                        st.session_state.prompt_manager._load_prompts()
+                        st.success(f"Prompt template '{new_prompt_name}' created successfully")
+                    except Exception as e:
+                        st.error(f"Error creating prompt: {str(e)}")
     
     # Batch Queue Management (if using existing prompts)
     if prompt_action == "Use existing prompts" and "prompt_batch_queue" in st.session_state and st.session_state.prompt_batch_queue:
