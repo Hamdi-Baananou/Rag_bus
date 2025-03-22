@@ -1,0 +1,50 @@
+prompt: "Extract material filling additives using this reasoning chain:
+    STEP 1: ADDITIVE IDENTIFICATION
+    - Scan document sections for:
+      ✓ Explicit additive declarations (GF, GB, MF, T)
+      ✓ Mechanical property context clues:
+        * \"reinforced with...\"
+        * \"improved [strength/stiffness] using...\"
+        * \"contains X% [additive]\"
+      ✓ Negative statements: \"no additives\", \"unfilled\"
+    STEP 2: CONTEXT VALIDATION
+    - For each candidate additive:
+      ✓ Confirm direct mechanical purpose:
+        - \"GF30 for stiffness\" → Valid ✓ 
+        - \"GB colorant\" → Rejected ✗ (non-mechanical)
+      ✗ Reject incidental mentions:
+        - \"MF manufacturing facility\" → Rejected ✗ 
+    STEP 3: NEGATION CHECK
+    - If explicit \"no additives\" statement is found:
+      ✓ Verify no contradictory mentions.
+      ✓ If confirmed, return **\"none\"**.
+    STEP 4: STANDARDIZATION
+    - Convert equivalents to standard abbreviations:
+      * \"Glass fiber\" → GF
+      * \"Mineral-filled\" → MF
+      * \"Talc-filled\" → T
+      * \"Glass beads\" → GB
+      * \"Mica-filled\" → MF
+    - Reject non-standard or ambiguous terms:
+      * \"Carbon additives\" → **NOT FOUND**
+    STEP 5: CERTAINTY ASSESSMENT
+    - Final check:
+      ✓ At least **one** valid additive with mechanical context.
+      ✓ No ambiguous or non-standard terms.
+      ✓ No conflicting information.
+    - If any doubts exist → **NOT FOUND**.
+    **Examples:**
+    - **PA66-GF30-T15 (improved impact resistance)**  
+      → REASONING: [Step1] Identified GF, T with mechanical context → [Step2] Valid → [Step4] Standardized  
+      → MATERIAL FILLING: **GF, T**  
+    - **Unfilled PPS compound**  
+      → REASONING: [Step1] \"Unfilled\" found → [Step3] Negative confirmation  
+      → MATERIAL FILLING: **none**  
+    - **Contains 5% specialty reinforcement**  
+      → REASONING: [Step1] Non-standard term → [Step4] Rejected → [Step5] Uncertain  
+      → MATERIAL FILLING: **NOT FOUND**  
+    **Output format:**  
+    REASONING: [Step analysis summary]  
+    MATERIAL FILLING: [abbreviations/none/NOT FOUND]
+
+    Document: {document_content}"
