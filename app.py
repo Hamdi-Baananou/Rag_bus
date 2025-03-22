@@ -312,12 +312,35 @@ with tab5:
                         variables_dict[var] = st.text_area(var, height=150)
                     else:
                         variables_dict[var] = st.text_input(var)
+                
+                # Add button to add this prompt to the queue - THIS IS THE NEW CODE
+                if st.button("Add to Prompt Queue"):
+                    # Make sure all variables are filled
+                    if all(variables_dict.values()):
+                        # Format the prompt with variables
+                        formatted_prompt = st.session_state.prompt_manager.format_prompt(
+                            selected_prompt, variables_dict
+                        )
+                        
+                        # Add to queue
+                        if "prompt_batch_queue" not in st.session_state:
+                            st.session_state.prompt_batch_queue = []
+                            
+                        st.session_state.prompt_batch_queue.append({
+                            "prompt_name": selected_prompt,
+                            "variables": variables_dict,
+                            "formatted_prompt": formatted_prompt
+                        })
+                        
+                        st.success(f"Added prompt '{selected_prompt}' to the queue")
+                    else:
+                        st.error("Please fill in all variables before adding to queue")
     
     else:  # Create new prompt
         st.subheader("Create New Prompt Template")
         
         new_prompt_name = st.text_input("Prompt Name (no spaces)")
-        new_prompt_template = st.text_area("Template", height=200,help="Use {variable_name} syntax for variables")
+        new_prompt_template = st.text_area("Template", height=200, help="Use {variable_name} syntax for variables")
         if st.button("Save Prompt Template"):
             if not new_prompt_name or not new_prompt_template:
                 st.error("Prompt name and template are required")
@@ -332,7 +355,7 @@ with tab5:
                     st.error(f"Error creating prompt: {str(e)}")
     
     # Batch Queue Management (if using existing prompts)
-    if prompt_action == "Use existing prompts" and "prompt_batch_queue" in st.session_state and st.session_state.prompt_batch_queue:
+    if "prompt_batch_queue" in st.session_state and st.session_state.prompt_batch_queue:
         st.subheader("Batch Prompt Queue")
         st.write(f"Queue size: {len(st.session_state.prompt_batch_queue)}")
         
