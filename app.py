@@ -310,8 +310,8 @@ with tab5:
                 for var in variables:
                     if var == 'document_content':
                         variables_dict[var] = st.text_area(var, height=150)
-                        else:
-                            variables_dict[var] = st.text_input(var)
+                    else:
+                        variables_dict[var] = st.text_input(var)
     
     else:  # Create new prompt
         st.subheader("Create New Prompt Template")
