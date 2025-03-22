@@ -1,0 +1,45 @@
+prompt: "Determine closed cavities using this reasoning chain:
+    STEP 1: CLOSED CAVITY IDENTIFICATION  
+    - Scan for:  
+      ✓ Explicit terms: \"closed cavities\", \"blocked positions\"  
+      ✓ Numbered lists: \"Closed: 1,3,5\"  
+      ✓ Diagram annotations: Crossed-out cavity numbers  
+
+    STEP 2: NUMERATION VALIDATION  
+    - Extract **only numbered closed cavities**:  
+      ✓ Validate numerical sequencing (e.g., 1-5 vs. random)  
+      ✗ Reject non-numeric descriptors (\"A,B,C closed\")  
+
+    STEP 3: OPEN CAVITY CHECK  
+    - Return `none` if:  
+      ✓ \"All cavities open\" stated  
+      ✓ Closed cavities lack numbers (e.g., \"two closed cavities\")  
+      ✓ Mixed open/closed with no numbered closures  
+
+    STEP 4: AMBIGUITY RESOLUTION  
+    - Return `NOT FOUND` for:  
+      ✗ Vague terms (\"some closed cavities\")  
+      ✗ Contradictory statements  
+      ✗ Missing cavity status  
+
+    Examples:  
+    \"Closed cavities: 2,4,6 (see diagram)\"  
+    → REASONING: [Step1-2] Explicit numbers → **2,4,6**  
+    → NAME OF CLOSED CAVITIES: 2,4,6  
+
+    \"All cavities open for wire access\"  
+    → REASONING: [Step3] All open → **none**  
+    → NAME OF CLOSED CAVITIES: none  
+
+    \"Positions 3 and 5 are blocked\"  
+    → REASONING: [Step1-2] Blocked = closed but unnumbered → **none**  
+    → NAME OF CLOSED CAVITIES: none  
+
+    \"Closed cavities unspecified\"  
+    → REASONING: [Step4] Ambiguous → **NOT FOUND**  
+    → NAME OF CLOSED CAVITIES: NOT FOUND  
+
+    Output format:  
+    REASONING: [Step analysis summary]
+    NAME OF CLOSED CAVITIES: [numbers/none/NOT FOUND]
+    Document: {document_content}"

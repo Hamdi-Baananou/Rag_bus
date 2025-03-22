@@ -1,0 +1,62 @@
+prompt: "Determine connector height using this reasoning chain:
+    STEP 1: COORDINATE SYSTEM ANALYSIS
+    - Identify connector type:
+      ✓ Round: X=Y=diameter → Height = diameter
+      ✓ Rectangular: X>Y (unless explicitly overridden)
+    - Locate mating face reference in X-Y plane
+
+    STEP 2: COMPONENT ISOLATION
+    - Identify height contributors in Y-axis:
+      ✓ Base housing
+      ✓ CPA/TPA in locked position
+      ✓ Seals/gaskets (radial seals excluded)
+    - Ignore X-axis protrusions (latches, wire seals)
+
+    STEP 3: MEASUREMENT EXTRACTION
+    - Capture values with:
+      ✓ Direct Y-axis labels (\"Y=12.5mm\")
+      ✓ Implied height terms (\"total height\", \"stack height\")
+      ✓ Assembly-specific values (\"when locked\")
+    - Reject non-Y dimensions (\"length\", \"width\")
+
+    STEP 4: LOCKED POSITION ADJUSTMENT
+    - For CPA/TPA:
+      ✓ Add locked position offset if specified
+      ✓ Use default engagement values:
+        * CPA: +0.8-1.2mm
+        * TPA: +0.5-0.7mm
+    - Sum sequential engagements:
+      \"Primary lock +2mm, secondary +1mm\" → +3mm
+
+    STEP 5: GEOMETRIC CALCULATION
+    - Rectangular connectors:
+      ✓ Sum component Y-values
+      ✓ Maintain axis priority (Y=height even if Y>X)
+    - Round connectors:
+      ✓ Use diameter directly
+      ✓ Ignore component offsets (radial seals)
+
+    STEP 6: VALIDATION
+    - Check against physical constraints:
+      ✓ Min height = 1.5mm
+      ✓ Max height = 150mm
+    - Implausible values? → 999
+
+    **Examples:**
+    - **\"Rectangular housing Y=6.2mm + CPA locked (+1.0mm)\"**
+      → REASONING: [Step2 ✓] Y-components → [Step4 ✓] 6.2+1 → [Step5 ✓] Sum 
+      → HEIGHT [MM]: **7.2**
+
+    - **\"Round connector Ø8.4 with radial seal\"**
+      → REASONING: [Step1 ✓] Round → [Step5 ✓] Diameter=height 
+      → HEIGHT [MM]: **8.4**
+
+    - **\"X=15mm/Y=18mm (special profile)\"**
+      → REASONING: [Step1 ✓] Y>X allowed → [Step3 ✓] Direct Y-value 
+      → HEIGHT [MM]: **18**
+
+    **Output format:**  
+    REASONING: [Step analysis with ✓/✗ markers]  
+    HEIGHT [MM]: [value/999]
+
+    Document: {document_content}"

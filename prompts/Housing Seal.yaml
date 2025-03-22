@@ -1,0 +1,59 @@
+prompt: "Determine housing seal type using this reasoning chain:
+    STEP 1: EXACT TERM SCAN
+    - Search for case-sensitive matches ONLY:
+      ✓ \"Radial Seal\" (capital R, capital S)
+      ✓ \"Interface Seal\" (capital I, capital S)
+    - Immediately reject:
+      ✗ Lowercase variations (\"radial seal\")
+      ✗ Plural/gerund forms (\"Seals\", \"Sealing\")
+      ✗ Combined terms (\"Radial/Interface\")
+
+    STEP 2: SEAL CONTEXT VALIDATION
+    - Confirm matches refer specifically to:
+      ✓ Connector-to-counterpart interface
+      ✓ Environmental sealing function
+      ✗ Internal terminal seals
+      ✗ Secondary locking features
+
+    STEP 3: CASE-SENSITIVITY VERIFICATION
+    - Character-by-character check:
+      ✓ \"R\" in Radial must be uppercase
+      ✓ \"I\" in Interface must be uppercase
+      ✓ \"S\" in Seal must be uppercase
+    - Reject even minor deviations:
+      ✗ \"Interface seal\" (lowercase S)
+      ✗ \"RADIAL SEAL\" (all caps)
+
+    STEP 4: EXCLUSIVE MATCH RESOLUTION
+    - If multiple matches:
+      ✓ Prioritize document hierarchy:
+        * \"Primary: Radial Seal\" → Select Radial
+        * \"Standard: Interface Seal\" → Select Interface
+      ✗ Reject ambiguous combinations:
+        * \"Available with Radial Seal or Interface Seal\"
+
+    STEP 5: FINAL VALIDATION
+    - Strict requirements:
+      1. Exact term match
+      2. Proper case sensitivity
+      3. Single validated occurrence
+      4. Housing-specific context
+
+    **Examples:**
+    - **\"Housing-to-counterpart seal: Radial Seal\"**
+      → REASONING: [Step1 ✓] Match → [Step2 ✓] Context → [Step3 ✓] Case → Valid 
+      → HOUSING SEAL: **Radial Seal**
+
+    - **\"interface Seal (P/N RS-456)\"**
+      → REASONING: [Step1 ✓] Lowercase 'i' → [Step3 ✗] Rejected → NOT FOUND 
+      → HOUSING SEAL: **NOT FOUND**
+
+    - **\"Radial Seal (primary) + Interface Seal (secondary)\"**
+      → REASONING: [Step1 ✓] Multiple → [Step4 ✓] Hierarchy → Radial 
+      → HOUSING SEAL: **Radial Seal**
+
+    **Output format:**  
+    REASONING: [Step analysis with ✓/✗ markers]  
+    HOUSING SEAL: [Radial Seal/Interface Seal/NOT FOUND]
+
+    Document: {document_content}"

@@ -1,0 +1,51 @@
+prompt: "Extract the Type of Connector using this reasoning chain:
+STEP 1: EXPLICIT TYPE IDENTIFICATION
+- Scan for exact terms:
+  ✓ \"Standard\"
+  ✓ \"Contact Carrier\"
+  ✓ \"Actuator\"
+  ✓ Other documented types (e.g., \"Sensor\", \"Power Distribution\")
+
+STEP 2: CONTEXTUAL INFERENCE
+- If no explicit type:
+  ✓ Analyze application context:
+    * \"Modular contact housing\" → **Contact Carrier**
+    * \"Used in mechanical actuation systems\" → **Actuator**
+    * \"General-purpose\" / No special features → **Standard**
+  ✓ Map keywords to types:
+    * \"Carrier,\" \"module holder\" → Contact Carrier
+    * \"Movement,\" \"lever-operated\" → Actuator
+    * \"Universal,\" \"base model\" → Standard
+
+STEP 3: APPLICATION VALIDATION
+- Verify inferred type aligns with:
+  ✓ Connector design (e.g., Contact Carriers have modular slots)
+  ✓ System integration described (e.g., Actuators link to moving parts)
+  ✗ Reject mismatches (e.g., \"Actuator\" term in a static assembly)
+
+STEP 4: DEFAULT RESOLUTION
+- No explicit/inferred type? → **NOT FOUND**
+- Generic connector without specialized use? → **Standard**
+
+Examples:
+\"Modular Contact Carrier (P/N CC-234)\"
+→ REASONING: [Step1] Explicit → **Contact Carrier**  
+→ TYPE OF CONNECTOR: Contact Carrier
+
+\"Connector for actuator assembly in robotic arm\"
+→ REASONING: [Step2] \"actuator\" context → **Actuator**  
+→ TYPE OF CONNECTOR: Actuator
+
+\"General automotive wiring connector\"
+→ REASONING: [Step4] Generic → **Standard**  
+→ TYPE OF CONNECTOR: Standard
+
+\"High-voltage junction module\"
+→ REASONING: [Step1-2] No matches → [Step4] **NOT FOUND**  
+→ TYPE OF CONNECTOR: NOT FOUND
+
+Output format:
+REASONING: [Key determinations]
+TYPE OF CONNECTOR: [Standard/Contact Carrier/Actuator/Other/NOT FOUND]
+
+Document: {document_content}"

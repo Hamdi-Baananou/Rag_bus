@@ -1,0 +1,54 @@
+prompt: "Extract connector width using this reasoning chain:
+STEP 1: GEOMETRY IDENTIFICATION
+- Classify connector shape:
+  ✓ Round: X = Y = diameter
+  ✓ Rectangular/other: X = longest axis
+- Validate via:
+  ✓ Explicit labels (\"rectangular housing\")
+  ✓ Diagram annotations (X-axis callouts)
+
+STEP 2: COMPONENT ADJUSTMENT
+- For TPA/CPA:
+  ✓ Check locked position dimensions
+  ✓ Add engagement offsets if specified:
+    * Typical CPA: +0.5-1.2mm
+    * Typical TPA: +0.3-0.8mm
+- Ignore non-X-axis protrusions (latches, seals)
+
+STEP 3: MEASUREMENT EXTRACTION
+- Prioritize explicit values:
+  ✓ \"X=24.5mm\"
+  ✓ \"Width: 18mm (locked)\"
+- For round connectors:
+  ✓ Use diameter directly (\"Ø12mm\" → 12)
+
+STEP 4: DOCUMENT HIERARCHY
+- Resolve conflicts using:
+  1. Engineering drawings > Spec sheets
+  2. Latest revision > Older versions
+  3. Dimensioned diagrams > Text descriptions
+
+STEP 5: VALIDATION
+- Check physical plausibility:
+  ✓ Min width = 2mm
+  ✓ Max width = 300mm
+- Implausible values? → NOT FOUND
+
+Examples:
+\"Rectangular housing X=32mm (CPA locked)\"
+→ REASONING: [Step1] Rect ✓ → [Step3] Direct value 
+→ WIDTH [MM]: 32
+
+\"Round connector Ø15.5 + TPA (+0.7mm)\"
+→ REASONING: [Step1] Round → [Step2] 15.5+0.7 → 16.2 
+→ WIDTH [MM]: 16.2
+
+\"X-axis: 25mm (pre-lock) / 26.2mm (CPA engaged)\"
+→ REASONING: [Step2] Locked state → 26.2 
+→ WIDTH [MM]: 26.2
+
+Output format:
+REASONING: [Key determinations]
+WIDTH [MM]: [value/NOT FOUND]
+
+Document: {document_content}"

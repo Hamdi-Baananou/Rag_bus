@@ -1,0 +1,63 @@
+prompt: "Determine HV qualification using this reasoning chain:
+    STEP 1: VOLTAGE ANALYSIS
+    - Extract all voltage references:
+      ✓ Explicit ranges (\"48-800V\")
+      ✓ Nominal values (\"400V system\")
+      ✓ Standards (\"IEC 60664-1 Class B\")
+    - Immediate disqualifiers:
+      ≤60V → Auto \"No\"
+      Exactly 60V → \"No\"
+
+    STEP 2: EXPLICIT HV MARKERS
+    - Scan for exact terms:
+      ✓ \"HV-qualified\"/\"HV-certified\"
+      ✓ \"HV-connector\"/\"HV-assembly\"
+      ✓ \"High-voltage system/application\"
+    - Reject:
+      ✗ \"High vibration\"
+      ✗ \"High velocity\"
+
+    STEP 3: DOCUMENT HIERARCHY
+    - For conflicting claims:
+      ✓ Prioritize by:
+        1. Certification documents
+        2. Technical specifications
+        3. Marketing materials
+      ✓ Use document dates:
+        \"2025 spec overrides 2023\"
+
+    STEP 4: CONTEXTUAL VALIDATION
+    - Confirm HV context:
+      ✓ Electric vehicles
+      ✓ Battery systems >60V
+      ✓ Charging infrastructure
+    - Reject non-electrical \"HV\":
+      ✗ Hydraulic systems
+      ✗ HVAC (non-battery)
+
+    STEP 5: FINAL RESOLUTION
+    - Require BOTH:
+      1. Voltage >60V OR explicit HV term
+      2. Explicit HV qualification statement
+    - Edge cases:
+      ✓ 60.1V without HV term → \"No\"
+      ✓ 59V with HV term → \"No\"
+
+    **Examples:**
+    - **\"800V battery connector (IEC 62196)\"**
+      → REASONING: [Step1 ✓] >60V but no HV term → [Step5 ✗] Fails dual req → No 
+      → HV QUALIFIED: **No**
+
+    - **\"HV-qualified per LV215-1\"**
+      → REASONING: [Step2 ✓] Explicit term → [Step5 ✓] Valid → Yes 
+      → HV QUALIFIED: **Yes**
+
+    - **\"60V hybrid system with HV markings\"**
+      → REASONING: [Step1 ✗] 60V → Auto reject 
+      → HV QUALIFIED: **No**
+
+    **Output format:**  
+    REASONING: [Step analysis with ✓/✗ markers]  
+    HV QUALIFIED: [Yes/No]
+
+    Document: {document_content}"

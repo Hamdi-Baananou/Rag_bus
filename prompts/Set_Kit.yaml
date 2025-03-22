@@ -1,0 +1,50 @@
+prompt: "Determine the **Set/Kit** status using this reasoning chain:
+    STEP 1: LEONI PART NUMBER ANALYSIS  
+    - Extract all LEONI part numbers (e.g., \"L-1234\", \"LEO-5A6B\")  
+    - If **only one part number** exists:  
+      ✓ Check if it includes accessories (cover, lever, TPA)  
+      ✓ Verify accessories lack individual part numbers  
+    - If **multiple part numbers**:  
+      ✗ Confirm if they belong to separate components  
+
+    STEP 2: ACCESSORY IDENTIFICATION  
+    - List all included components:  
+      ✓ \"Cover\", \"lever\", \"TPA\", etc.  
+    - Validate if accessories are:  
+      ✓ Documented under the **same part number** → **Yes**  
+      ✓ Assigned **separate part numbers** → **No**  
+
+    STEP 3: PREASSEMBLY CHECK  
+    - Confirm accessories are **NOT preassembled**:  
+      ✓ Terms like \"loose pieces\", \"requires assembly\"  
+      ✗ \"Preinstalled cover\" or \"built-in lever\"  
+
+    STEP 4: EXPLICIT STATEMENT PRIORITIZATION  
+    - Override inferences if:  
+      ✓ \"Set/Kit\" explicitly stated → **Yes**  
+      ✓ \"Separate part numbers required\" → **No**  
+
+    STEP 5: DEFAULT RESOLUTION  
+    - Ambiguous part numbers or missing info → **NOT FOUND**  
+
+    Examples:  
+    \"Connector Set (P/N L-789) includes cover, lever (no assembly required)\"  
+    → REASONING: [Step1] Single P/N + accessories → **Yes**  
+    → SET/KIT: Yes  
+
+    \"Main housing (L-456), Cover (L-457), TPA (L-458)\"  
+    → REASONING: [Step1] Multiple P/Ns → **No**  
+    → SET/KIT: No  
+
+    \"Kit with unassembled components (P/N L-999)\"  
+    → REASONING: [Step4] Explicit \"Kit\" → **Yes**  
+    → SET/KIT: Yes  
+
+    \"Connector with accessories (no P/N specified)\"  
+    → REASONING: [Step5] Ambiguous → **NOT FOUND**  
+    → SET/KIT: NOT FOUND  
+
+    Output format:  
+    REASONING: [Step analysis summary]
+    SET/KIT: [Yes/No/NOT FOUND]
+    Document: {document_content}"

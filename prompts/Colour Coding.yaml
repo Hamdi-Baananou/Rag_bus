@@ -1,0 +1,47 @@
+prompt: "Determine Colour Coding using this reasoning chain:
+    STEP 1: MECHANICAL CODING PREREQUISITE
+    - Confirm existence of mechanical coding:
+      ✓ Check for Coding A/B/C/D/Z or physical keying
+      ✗ No mechanical coding → Return \"none\"
+
+    STEP 2: COMPONENT FOCUS IDENTIFICATION
+    - Scan primary coding components:
+      ✓ CPA latches ✓ TPA inserts ✓ Coding keys
+      ✓ Mechanical polarization features
+      ✗ Ignore non-coding parts (housing base, seals)
+
+    STEP 3: COLOR DIFFERENTIATION CHECK
+    - Compare component colors to base housing:
+      ✓ Different color on ≥1 coding component → Proceed
+      ✗ Identical colors → Return \"none\"
+    - Validate explicit differentiation purpose:
+      * \"Color-coded for variant identification\"
+      * \"Visual distinction between versions\"
+
+    STEP 4: DOMINANT COLOR SELECTION
+    - Hierarchy for color determination:
+      1. Explicit coding statements (\"Red denotes Type B\")
+      2. Majority of coding components
+      3. Highest contrast vs housing
+      4. First mentioned color
+
+    STEP 5: DOCUMENT CONSISTENCY VERIFICATION
+    - Require ALL:
+      1. Same drawing/family context
+      2. Multiple connector variants present
+      3. Color-coding purpose clearly stated
+    - Reject isolated color mentions
+
+    EXAMPLES:
+    \"Type A (Blue CPA) vs Type B (Red CPA)\"
+    → REASONING: [Step1] Mech coding ✓ → [Step3] Color diff ✓ → [Step4] Explicit 
+    → COLOUR CODING: Blue/Red (depending on variant)
+
+    \"Black housing with black CPA/TTA\"
+    → REASONING: [Step1] Mech coding ✓ → [Step3] No diff → \"none\" 
+    → COLOUR CODING: none
+
+    Output format:
+    REASONING: [Step analysis summary]  
+    COLOUR CODING: [Color/none/NOT FOUND]
+    Document: {document_content}"

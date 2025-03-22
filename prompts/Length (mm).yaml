@@ -1,0 +1,63 @@
+prompt: "Extract connector length using this reasoning chain:
+STEP 1: COORDINATE SYSTEM ANALYSIS
+- Identify connector geometry:
+  ✓ Round: X=Y=diameter (Z independent)
+  ✓ Rectangular: Z=length from mating face to rear
+- Locate mating face reference in X-Y plane
+
+STEP 2: COMPONENT ISOLATION
+- Identify Z-axis contributors:
+  ✓ Main housing body
+  ✓ CPA/TPA in locked position
+  ✓ Wire/cable entry features
+- Ignore:
+  ✗ X-axis components (latches, seals)
+  ✗ Radial seals (perpendicular to Z-axis)
+
+STEP 3: MEASUREMENT EXTRACTION
+- Capture values with:
+  ✓ Explicit Z-axis labels (\"Z=32.5mm\")
+  ✓ Length-specific terms:
+    * \"Total length from mating face to rear\"
+    * \"Insertion depth\"
+  ✓ Assembly diagrams with dimension lines
+
+STEP 4: LOCKED POSITION ADJUSTMENT
+- For CPA/TPA:
+  ✓ Add locked position offset if specified
+  ✓ Use default engagement values:
+    * CPA: +1.0-1.5mm
+    * TPA: +0.8-1.2mm
+- Sum sequential engagements:
+  \"Primary lock +1.5mm\" → Add to base length
+
+STEP 5: DOCUMENT PRIORITIZATION
+- For multiple values:
+  ✓ Compare document dates
+  ✓ Prefer engineering specs over marketing docs
+  ✓ Use revision numbers (Rev C > Rev B)
+
+STEP 6: VALIDATION
+- Check against physical constraints:
+  ✓ Min length = 5mm
+  ✓ Max length = 500mm
+- Implausible values? → 999
+
+Examples:
+\"Rectangular Z=25mm + CPA locked (+2.0mm)\"
+→ REASONING: [Step2] Z-components → [Step4] 25+2 → [Step6] Valid 
+→ LENGTH [MM]: 27
+
+\"Round connector Ø12mm (Z=15mm)\"
+→ REASONING: [Step1] Round → [Step3] Direct Z-value 
+→ LENGTH [MM]: 15
+
+\"2023 Spec: 40mm | 2025 Spec: 35mm\"
+→ REASONING: [Step5] Newer doc → [Step6] Valid 
+→ LENGTH [MM]: 35
+
+Output format:
+REASONING: [Key determinations]  
+LENGTH [MM]: [value/999]
+
+Document: {document_content}"
