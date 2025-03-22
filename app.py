@@ -79,6 +79,20 @@ with tab1:
     st.header("Upload and Process Documents")
     uploaded_files = st.file_uploader("Upload PDF Documents", type="pdf", accept_multiple_files=True)
     
+    # Add advanced chunking configuration options
+    with st.expander("Advanced Chunking Options"):
+        use_advanced_chunking = st.checkbox("Use Advanced Chunking", value=True)
+        chunk_size = st.slider("Chunk Size", min_value=100, max_value=1000, value=300, step=50)
+        chunk_overlap = st.slider("Chunk Overlap", min_value=0, max_value=200, value=30, step=10)
+    
+    # Add retrieval configuration options
+    with st.expander("Retrieval Configuration"):
+        retrieval_k = st.slider("Number of Documents to Retrieve (k)", min_value=1, max_value=20, value=5)
+        search_type = st.radio("Search Type", ["similarity", "mmr"], index=1)
+        score_threshold = st.slider("Score Threshold", min_value=0.0, max_value=1.0, value=0.7, step=0.05)
+        use_hybrid_search = st.checkbox("Use Hybrid Search", value=False)
+        use_reranker = st.checkbox("Use Reranker", value=False)
+    
     if st.button("Process Documents", key="process_docs"):
         if uploaded_files:
             with st.spinner("Processing documents..."):
@@ -97,28 +111,74 @@ with tab1:
                     
                     # Initialize vector store
                     vector_store = VectorStore()
+                    
+                    # Configure advanced chunking if enabled
+                    if use_advanced_chunking:
+                        vector_store.setup_advanced_chunking(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+                    
+                    # Setup Chroma with or without advanced chunking
+                    retriever = vector_store.setup_chroma(documents, use_advanced_chunking=use_advanced_chunking)
+                    
+                    # Configure retriever settings
+                    vector_store.configure_retriever(k=retrieval_k, search_type=search_type, score_threshold=score_threshold)
+                    
+                    # Setup hybrid search if enabled
+                    if use_hybrid_search:
+                        retriever = vector_store.setup_hybrid_search()
+                    
+                    # Add reranker if enabled
+                    if use_reranker:
+                        retriever = vector_store.add_reranker()
+                    
+                    # Store in session state
                     st.session_state.vector_store = vector_store
-                    retriever = vector_store.setup_chroma(documents)
                     
                     # Get and display vector store stats
                     stats = vector_store.get_stats()
                     
                     # Create metrics display
-                    col1, col2 = st.columns(2)
+                    col1, col2, col3 = st.columns(3)
                     with col1:
                         st.metric("Total Chunks Created", stats["chunks_count"])
                     with col2:
                         st.metric("Total Embeddings Generated", stats["embedding_count"])
+                    with col3:
+                        st.metric("Average Chunk Size", f"{stats.get('avg_chunk_size', 'N/A')} tokens")
+                    
+                    # Display advanced stats if available
+                    try:
+                        advanced_stats = vector_store.get_advanced_stats()
+                        st.subheader("Advanced Vector Store Statistics")
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Embedding Dimension", advanced_stats.get("embedding_dimension", "N/A"))
+                        with col2:
+                            st.metric("Indexing Method", advanced_stats.get("indexing_method", "N/A"))
+                        with col3:
+                            st.metric("Distance Function", advanced_stats.get("distance_function", "N/A"))
+                        
+                        if "chunk_distribution" in advanced_stats:
+                            st.bar_chart(advanced_stats["chunk_distribution"])
+                    except Exception as e:
+                        st.info("Advanced statistics not available")
                     
                     # Log to event bus
                     st.session_state.event_bus.publish("documents_processed", {
                         "num_documents": len(documents),
                         "document_names": [doc.metadata.get("source") for doc in documents],
                         "chunks_count": stats["chunks_count"],
-                        "embedding_count": stats["embedding_count"]
+                        "embedding_count": stats["embedding_count"],
+                        "advanced_chunking": use_advanced_chunking,
+                        "chunk_size": chunk_size if use_advanced_chunking else "default",
+                        "chunk_overlap": chunk_overlap if use_advanced_chunking else "default",
+                        "search_type": search_type,
+                        "retrieval_k": retrieval_k,
+                        "hybrid_search": use_hybrid_search,
+                        "reranker_used": use_reranker
                     })
                     
-                    st.session_state.processing_status = f"Successfully processed {len(documents)} documents creating {stats['chunks_count']} chunks with {stats['embedding_count']} embeddings"
+                    st.session_state.processing_status = f"Successfully processed {len(documents)} documents with {stats['chunks_count']} chunks"
                     st.success(st.session_state.processing_status)
                     
                 except Exception as e:
@@ -133,6 +193,17 @@ with tab2:
         st.warning("Please upload and process documents first")
     else:
         question = st.text_input("Your Question", placeholder="What would you like to know from the documents?")
+        
+        # Add retrieval method selector
+        with st.expander("Retrieval Options"):
+            retrieval_method = st.radio(
+                "Retrieval Method", 
+                ["Default", "Hybrid Search", "Reranker"], 
+                index=0,
+                help="Choose how documents are retrieved for answering your question"
+            )
+            
+            show_sources = st.checkbox("Show Source Documents", value=False)
         
         if st.button("Get Answer", key="ask_question"):
             if not question:
@@ -151,15 +222,32 @@ with tab2:
                             event_bus=st.session_state.event_bus
                         )
                         
-                        # Get retriever from vector store
-                        retriever = st.session_state.vector_store.get_retriever()
+                        # Get appropriate retriever based on selection
+                        if retrieval_method == "Default":
+                            retriever = st.session_state.vector_store.get_retriever()
+                        elif retrieval_method == "Hybrid Search":
+                            retriever = st.session_state.vector_store.setup_hybrid_search()
+                        elif retrieval_method == "Reranker":
+                            retriever = st.session_state.vector_store.add_reranker()
                         
+                        # Get retrieved documents if show_sources is enabled
+                        if show_sources:
+                            retrieved_docs = retriever.get_relevant_documents(question)
+                            
                         # Get answer
                         result = llm_service.ask_question(question, retriever)
                         
                         # Display answer
                         st.subheader("Answer:")
                         st.markdown(result)
+                        
+                        # Display source documents if enabled
+                        if show_sources:
+                            st.subheader("Source Documents:")
+                            for i, doc in enumerate(retrieved_docs):
+                                with st.expander(f"Source {i+1}: {doc.metadata.get('source', 'Unknown')} (Page {doc.metadata.get('page', 'N/A')})"):
+                                    st.write(doc.page_content)
+                                    st.write("**Metadata:**", doc.metadata)
                         
                         # Evaluate answer if enabled
                         if enable_answer_eval:
@@ -284,16 +372,65 @@ with tab4:
         # Add Vector Store stats section
         if st.session_state.vector_store:
             st.subheader("Vector Store Statistics")
-            stats = st.session_state.vector_store.get_stats()
             
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Total Chunks", stats["chunks_count"])
-            with col2:
-                st.metric("Total Embeddings", stats["embedding_count"])
+            # Tabs for basic and advanced stats
+            stats_tab1, stats_tab2 = st.tabs(["Basic Stats", "Advanced Stats"])
             
-            st.info(f"Collection Name: {stats['collection_name']}")
-        
+            with stats_tab1:
+                stats = st.session_state.vector_store.get_stats()
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Chunks", stats["chunks_count"])
+                with col2:
+                    st.metric("Total Embeddings", stats["embedding_count"])
+                with col3:
+                    st.metric("Average Chunk Size", f"{stats.get('avg_chunk_size', 'N/A')}")
+                
+                st.info(f"Collection Name: {stats['collection_name']}")
+            
+            with stats_tab2:
+                try:
+                    advanced_stats = st.session_state.vector_store.get_advanced_stats()
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Embedding Dimension", advanced_stats.get("embedding_dimension", "N/A"))
+                    with col2:
+                        st.metric("Retrieval Method", advanced_stats.get("retrieval_method", "N/A"))
+                    with col3:
+                        st.metric("Similarity Score Threshold", f"{advanced_stats.get('similarity_threshold', 'N/A')}")
+                    
+                    # Display retrieval configuration
+                    st.subheader("Retrieval Configuration")
+                    st.json({
+                        "k": advanced_stats.get("k", "N/A"),
+                        "search_type": advanced_stats.get("search_type", "N/A"),
+                        "hybrid_search": advanced_stats.get("hybrid_search_enabled", False),
+                        "reranker": advanced_stats.get("reranker_enabled", False),
+                        "distance_function": advanced_stats.get("distance_function", "N/A")
+                    })
+                    
+                    # Display chunking config
+                    st.subheader("Chunking Configuration")
+                    st.json({
+                        "chunking_method": advanced_stats.get("chunking_method", "Standard"),
+                        "chunk_size": advanced_stats.get("chunk_size", "N/A"),
+                        "chunk_overlap": advanced_stats.get("chunk_overlap", "N/A")
+                    })
+                    
+                    # Display chunk distribution if available
+                    if "chunk_distribution" in advanced_stats:
+                        st.subheader("Chunk Size Distribution")
+                        st.bar_chart(advanced_stats["chunk_distribution"])
+                    
+                    # Display retrieval performance if available
+                    if "retrieval_times" in advanced_stats:
+                        st.subheader("Retrieval Performance")
+                        st.line_chart(advanced_stats["retrieval_times"])
+                        
+                except Exception as e:
+                    st.info("Advanced statistics not available")
         
         # Add more detailed evaluation data as needed
         if evaluation_data.get("answer_quality_scores"):
