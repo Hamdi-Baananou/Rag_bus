@@ -282,7 +282,7 @@ class VectorStore:
         return self.hybrid_retriever
     
     def add_reranker(self, reranker_model="cross-encoder/ms-marco-MiniLM-L-6-v2", top_n=3, cohere_api_key=None):
-    """
+        """
     Add a reranker to improve retrieval precision
     
     Args:
@@ -293,26 +293,23 @@ class VectorStore:
     Returns:
         ContextualCompressionRetriever: Reranking retriever
     """
-    if self.retriever is None:
-        raise ValueError("Base retriever not initialized. Process documents first.")
-    
-    try:
-        # Initialize the reranker with API key
-        api_key = cohere_api_key or "n7aGb2q854nHoMl3lqzmEaKlqgny9QhwKgkQ1JPB"
-        compressor = CohereRerank(top_n=top_n, cohere_api_key=api_key)
-        
-        # Create a compression retriever
-        self.reranking_retriever = ContextualCompressionRetriever(
-            base_retriever=self.retriever,
-            base_compressor=compressor
+        if self.retriever is None:
+            raise ValueError("Base retriever not initialized. Process documents first.")
+        try:
+            api_key = cohere_api_key or "n7aGb2q854nHoMl3lqzmEaKlqgny9QhwKgkQ1JPB"
+            compressor = CohereRerank(top_n=top_n, cohere_api_key=api_key)
+            
+            self.reranking_retriever = ContextualCompressionRetriever(
+                base_retriever=self.retriever,
+                base_compressor=compressor
         )
         
-        return self.reranking_retriever
+            return self.reranking_retriever
         
-    except Exception as e:
-        st.warning(f"Error setting up reranker: {str(e)}. Make sure you have the required dependencies installed.")
+        except Exception as e:
+            st.warning(f"Error setting up reranker: {str(e)}. Make sure you have the required dependencies installed.")
         # Return the original retriever if reranker setup fails
-        return self.retriever
+            return self.retriever
     
     def enrich_metadata(self, document, metadata):
         """
