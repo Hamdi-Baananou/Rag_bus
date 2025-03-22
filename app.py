@@ -300,44 +300,84 @@ with tab5:
         if not available_prompts:
             st.info("No prompt templates available. Create a new prompt template to get started.")
         else:
-            selected_prompt = st.selectbox("Select Prompt Template", available_prompts)
-
-            if selected_prompt:
-                prompt_text = st.session_state.prompt_manager.get_prompt(selected_prompt)
+            # Add "Select All" button and initialize selected_prompts if not in session state
+            if "selected_prompts" not in st.session_state:
+                st.session_state.selected_prompts = []
                 
-                # Extract all variables except document_content
-                all_variables = list(set(re.findall(r'\{(\w+)\}', prompt_text)))
-                user_variables = [var for var in all_variables if var != 'document_content']
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                # Multi-select box for prompts
+                selected_prompts = st.multiselect(
+                    "Select Prompt Templates", 
+                    available_prompts,
+                    default=st.session_state.selected_prompts
+                )
+                # Update session state
+                st.session_state.selected_prompts = selected_prompts
                 
-                if 'document_content' in all_variables:
-                    st.info("This prompt contains a {document_content} variable that will be automatically populated from retrieved documents.")
+            with col2:
+                # Select All button
+                if st.button("Select All"):
+                    st.session_state.selected_prompts = available_prompts
+                    # Force the page to rerun so the multiselect updates
+                    st.experimental_rerun()
+            
+            # Only proceed if at least one prompt is selected
+            if selected_prompts:
+                st.subheader("Configure Selected Prompts")
                 
-                # Only show inputs for non-document variables
-                st.subheader("Prompt Variables")
-                variables_dict = {}
-                for var in user_variables:
-                    variables_dict[var] = st.text_input(var)
+                # Allow user to configure variables for each selected prompt
+                prompt_configs = []
                 
-                # Add button to add this prompt to the queue
-                if st.button("Add to Prompt Queue"):
+                for selected_prompt in selected_prompts:
+                    with st.expander(f"Configure: {selected_prompt}"):
+                        prompt_text = st.session_state.prompt_manager.get_prompt(selected_prompt)
+                        
+                        # Extract all variables except document_content
+                        all_variables = list(set(re.findall(r'\{(\w+)\}', prompt_text)))
+                        user_variables = [var for var in all_variables if var != 'document_content']
+                        
+                        if 'document_content' in all_variables:
+                            st.info("This prompt contains a {document_content} variable that will be automatically populated from retrieved documents.")
+                        
+                        # Only show inputs for non-document variables
+                        st.subheader("Prompt Variables")
+                        variables_dict = {}
+                        for var in user_variables:
+                            variables_dict[var] = st.text_input(f"{selected_prompt}_{var}", key=f"{selected_prompt}_{var}")
+                        
+                        # Add this configured prompt to the list
+                        prompt_configs.append({
+                            "prompt_name": selected_prompt,
+                            "variables": variables_dict,
+                            "has_document_var": 'document_content' in all_variables,
+                            "configured": all(variables_dict.values()) or not user_variables
+                        })
+                
+                # Add button to add these prompts to the queue
+                if st.button("Add Selected Prompts to Queue"):
                     # Check if vector store exists
                     if st.session_state.vector_store is None:
                         st.error("Please upload and process documents first before adding prompts to the queue")
-                    # Make sure all user variables are filled
-                    elif all(variables_dict.values()) or not user_variables:
-                        # Add to queue
-                        if "prompt_batch_queue" not in st.session_state:
-                            st.session_state.prompt_batch_queue = []
-                            
-                        st.session_state.prompt_batch_queue.append({
-                            "prompt_name": selected_prompt,
-                            "variables": variables_dict,
-                            "has_document_var": 'document_content' in all_variables
-                        })
-                        
-                        st.success(f"Added prompt '{selected_prompt}' to the queue")
                     else:
-                        st.error("Please fill in all variables before adding to queue")
+                        # Check if all prompts are configured
+                        unconfigured_prompts = [p["prompt_name"] for p in prompt_configs if not p["configured"]]
+                        
+                        if unconfigured_prompts:
+                            st.error(f"Please complete the configuration for: {', '.join(unconfigured_prompts)}")
+                        else:
+                            # Add configured prompts to queue
+                            if "prompt_batch_queue" not in st.session_state:
+                                st.session_state.prompt_batch_queue = []
+                                
+                            for config in prompt_configs:
+                                st.session_state.prompt_batch_queue.append({
+                                    "prompt_name": config["prompt_name"],
+                                    "variables": config["variables"],
+                                    "has_document_var": config["has_document_var"]
+                                })
+                            
+                            st.success(f"Added {len(prompt_configs)} prompts to the queue")
     
     else:  # Create new prompt
         st.subheader("Create New Prompt Template")
